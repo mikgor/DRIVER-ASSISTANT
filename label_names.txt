@@ -1,0 +1,92 @@
+niebezpieczny zakręt w prawo
+nierówna droga
+próg zwalniający
+zwężenie jezdni — dwustronne
+roboty na drodze
+śliska jezdnia
+przejście dla pieszych
+dzieci
+zwierzęta dzikie
+niebezpieczny zakręt w lewo
+odcinek jezdni o ruchu dwukierunkowym
+tramwaj
+rowerzyści
+sygnały świetlne
+niebezpieczne zakręty — pierwszy w prawo
+inne niebezpieczeństwo
+niebezpieczne pobocze (wariant)
+niebezpieczne zakręty — pierwszy w lewo
+skrzyżowanie z drogą podporządkowaną występującą po obu stronach
+skrzyżowanie z drogą podporządkowaną występującą po prawej stronie
+skrzyżowanie z drogą podporządkowaną występującą po lewej stronie
+wlot drogi jednokierunkowej z prawej strony
+wlot drogi jednokierunkowej z lewej strony
+ustąp pierwszeństwa
+skrzyżowanie o ruchu okrężnym
+zakaz ruchu w obu kierunkach
+zakaz wjazdu pojazdów o rzeczywistej masie całkowitej ponad …t
+zakaz wjazdu
+stop
+zakaz skręcania w lewo
+zakaz skręcania w prawo
+zakaz wyprzedzania
+zakaz wyprzedzania przez samochody ciężarowe
+koniec zakazu wyprzedzania
+ograniczenie prędkości
+koniec ograniczenia prędkości
+zakaz zatrzymywania się
+zakaz ruchu pieszych
+koniec zakazów
+strefa ograniczonej prędkości
+koniec strefy ograniczonej prędkości
+zakaz wjazdu samochodów ciężarowych o rzeczywistej masie całkowitej ponad …t
+zakaz wjazdu pojazdów innych niż samochodowe
+zakaz wjazdu pojazdów zaprzęgowych
+zakaz wjazdu rowerów
+nakaz jazdy z lewej strony znaku
+ruch okrężny
+droga dla rowerów
+droga dla pieszych i rowerów
+koniec drogi dla rowerów
+koniec drogi dla pieszych i rowerów
+droga dla pieszych
+nakaz jazdy w prawo za znakiem
+nakaz jazdy w lewo za znakiem
+nakaz jazdy prosto
+nakaz jazdy prosto lub w prawo
+nakaz jazdy prosto lub w lewo
+nakaz jazdy z prawej strony znaku
+droga z pierwszeństwem
+koniec pasa ruchu
+przystanek autobusowy
+parking
+parking zadaszony
+koniec drogi z pierwszeństwem
+szpital
+stacja paliwowa
+stacja paliwowa tylko z gazem do napędu pojazdów
+telefon
+stacja obsługi technicznej
+myjnia
+toaleta publiczna
+bufet lub kawiarnia
+restauracja
+hotel (motel)
+droga jednokierunkowa
+strefa zamieszkania
+koniec strefy zamieszkania
+obszar zabudowany
+koniec obszaru zabudowanego
+droga bez przejazdu
+wjazd na drogę bez przejazdu
+automatyczna kontrola prędkości
+strefa ruchu
+koniec strefy ruchu
+przejście dla pieszych
+przejście dla pieszych i przejazd dla rowerzystów
+droga ekspresowa
+koniec drogi ekspresowej
+autostrada
+zbiorcza tablica informacyjna
+słupek wskaźnikowy z trzema kreskami umieszczany po prawej stronie jezdni
+krzyż św. Andrzeja przed przejazdem kolejowo-drogowym jednotorowym
