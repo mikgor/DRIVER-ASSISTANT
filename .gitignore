@@ -112,6 +112,6 @@ pip-selfcheck.json
 .idea_modules/
 
 /data
-my_model
-new_model
+data/classification/models/my_model
+data/classification/models/new_model
 *model.*

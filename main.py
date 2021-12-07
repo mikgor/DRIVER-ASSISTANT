@@ -5,7 +5,7 @@ from utils import *
 images_folder_path = 'data/detection/images/'
 rsd = RoadSignDetection()
 
-# rsc = RoadSignClassification(test_data_path='data/street_view')
+# rsc = RoadSignClassification()
 # print('Making predictions on test data...')
 # rsc.model_predict_test_data(show_images=True)
 rsc = RoadSignClassification(test_data_path=None)

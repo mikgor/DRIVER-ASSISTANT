@@ -1,5 +1,5 @@
 # DRIVER ASSISTANT
-DRIVER ASSISTANT (DA) is an application that detects and recognizes Polish road signs.
+DRIVER ASSISTANT (DA) is an application that detects and classifies Polish road signs.
 ## Development
 
 ### Virtual environment setup
@@ -19,5 +19,5 @@ DRIVER ASSISTANT (DA) is an application that detects and recognizes Polish road 
 ### Data sources
 * Detection
     * Test data (data/detection/images) - Google Street View
-* Recognition: 
-    * Train (data/train) and test data (data/test) - https://www.kaggle.com/kasia12345/polish-traffic-signs-dataset
+* Classification: 
+    * Train (data/classification/train) and test data (data/classification/test) - https://www.kaggle.com/kasia12345/polish-traffic-signs-dataset

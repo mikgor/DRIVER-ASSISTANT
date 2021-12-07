@@ -10,15 +10,15 @@ np.random.seed(1)
 
 
 class RoadSignClassification:
-    def __init__(self, test_data_path='data/test'):
+    def __init__(self, test_data_path='data/classification/test'):
         self.labels = read_file_lines('labels.txt')
         self.label_names = read_file_lines('label_names.txt')
 
         self.shape = (100, 100)
         self.load_saved_model = True
-        self.load_model_path = 'my_model'
+        self.load_model_path = 'data/classification/models/my_model'
         self.save_trained_model = False
-        self.save_trained_model_path = 'new_model'
+        self.save_trained_model_path = 'data/classification/models/new_model'
 
         if test_data_path is not None:
             # Obtaining testing data
@@ -34,7 +34,7 @@ class RoadSignClassification:
 
             # Obtaining training data
             print("Obtaining training data...")
-            self.train_images, self.train_labels = self.get_data('data/train')
+            self.train_images, self.train_labels = self.get_data('data/classification/train')
             # Turn a single categorical column into many indicator columns (A-1, A-11, A-11a, ...)
             self.train_labels = pd.get_dummies(self.train_labels).values
 
