@@ -1,4 +1,3 @@
-import pandas as pd
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPool2D
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.callbacks import CSVLogger
@@ -131,16 +130,14 @@ class RoadSignClassification:
 
     def model_predict_test_data(self, show_images=False):
         predicted = 0
-        total = 0
+        total = len(self.test_images)
 
-        for index in range(len(self.test_images)):
+        for index in range(total):
             image = self.test_images[index:index+1]
             image_label = self.test_labels[index:index+1][0]
             max_label_index = self.model_predict_max_label_index(image)
             predicted_label = self.labels[max_label_index]
             predicted_label_name = self.label_names[max_label_index]
-
-            total = total + 1
 
             if predicted_label == image_label:
                 predicted = predicted + 1
