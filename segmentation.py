@@ -1,7 +1,7 @@
 from utils import *
 
 
-class RoadSignDetection:
+class RoadSignSegmentation:
     def __init__(self):
         self.labels_to_detect = ['TrafficSign']
 
