@@ -9,14 +9,14 @@ np.random.seed(1)
 
 
 class RoadSignClassification:
-    def __init__(self, test_data_path='data/classification/test'):
+    def __init__(self, test_data_path='data/classification/test', augment_train_data=False):
         self.labels = read_file_lines('labels.txt')
         self.label_names = read_file_lines('label_names.txt')
 
         self.shape = (100, 100)
         self.load_saved_model = True
         self.load_model_path = 'data/classification/models/my_model'
-        self.save_trained_model = False
+        self.save_trained_model = True
         self.save_trained_model_path = 'data/classification/models/new_model'
 
         if test_data_path is not None:
@@ -33,35 +33,35 @@ class RoadSignClassification:
 
             # Obtaining training data
             print("Obtaining training data...")
-            self.train_images, self.train_labels = self.get_data('data/classification/train')
+            self.train_images, self.train_labels = self.get_data('data/classification/train', augment_train_data)
             # Turn a single categorical column into many indicator columns (A-1, A-11, A-11a, ...)
             self.train_labels = pd.get_dummies(self.train_labels).values
 
             # Splitting training data into train and validation datasets
             print("Splitting training data...")
-            train_x, train_y, validation_x, validation_y = train_test_split(
+            train_x, validation_x, train_y, validation_y = train_test_split(
                 self.train_images, self.train_labels, random_state=1)
 
             print("Training model...")
             self.train_model(train_x, train_y, validation_x, validation_y)
 
-            evaluate = self.evaluate_model(validation_x, validation_y)
-            print(evaluate)
-
-            self.show_history_metric('acc')
-            self.show_history_metric('loss')
-
             if self.save_trained_model:
                 print("Saving model...")
                 self.save_model()
 
+            evaluate = self.evaluate_model(validation_x, validation_y)
+            print(evaluate)
+
+            self.save_history_metric('acc')
+            self.save_history_metric('loss')
+
         self.model.summary()
-        # self.show_history()
+        self.show_history()
 
     def load_and_resize_image(self, path):
         return load_and_transform_image(path, self.shape)
 
-    def get_data(self, path):
+    def get_data(self, path, augment_data=False):
         images = []
         image_labels = []
 
@@ -71,6 +71,22 @@ class RoadSignClassification:
                 image = self.load_and_resize_image(os.path.join(path, sign_image_path))
                 images.append(image)
                 image_labels.append(sign_code)
+
+        if augment_data:
+            print('Augmenting dataset...')
+            images_copy = images.copy()
+            image_labels_copy = image_labels.copy()
+
+            seq = iaa.Sequential([
+                iaa.BlendAlpha(0.5, iaa.Grayscale(1.0)),
+                iaa.GammaContrast((0.5, 2.0)),
+                iaa.SigmoidContrast(gain=(3, 10), cutoff=(0.4, 0.6))
+            ])
+
+            images_aug = seq(images=images_copy)
+
+            images = images + images_aug
+            image_labels = image_labels + image_labels_copy
 
         return np.array(images), image_labels
 
@@ -97,7 +113,7 @@ class RoadSignClassification:
 
         return model
 
-    def train_model(self, train_x, train_y, validation_x, validation_y, epochs=50, batch_size=50):
+    def train_model(self, train_x, train_y, validation_x, validation_y, epochs=150, batch_size=50):
         csv_logger = CSVLogger('{}.log'.format(self.save_trained_model_path), separator=',', append=False)
 
         return self.model.fit(train_x, train_y, epochs=epochs, batch_size=batch_size,
@@ -115,14 +131,14 @@ class RoadSignClassification:
         else:
             print(self.model.history)
 
-    def show_history_metric(self, metric):
+    def save_history_metric(self, metric):
         plt.plot(self.model.history[metric])
         plt.plot(self.model.history['val_{}'.format(metric)])
         plt.title('model {}'.format(metric))
         plt.ylabel(metric)
         plt.xlabel('epoch')
         plt.legend(['train', 'test'], loc='upper left')
-        plt.show()
+        plt.savefig(os.path.join(self.save_trained_model_path, f'_{metric}.png'))
 
     def evaluate_model(self, validation_x, validation_y):
         # The loss value & metrics values for the model.
