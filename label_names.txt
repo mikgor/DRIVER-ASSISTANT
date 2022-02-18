@@ -14,7 +14,7 @@ rowerzyści
 sygnały świetlne
 niebezpieczne zakręty — pierwszy w prawo
 inne niebezpieczeństwo
-niebezpieczne pobocze
+oszronienie jezdni
 niebezpieczne zakręty — pierwszy w lewo
 skrzyżowanie z drogą podporządkowaną występującą po obu stronach
 skrzyżowanie z drogą podporządkowaną występującą po prawej stronie
@@ -39,7 +39,7 @@ zakaz ruchu pieszych
 koniec zakazów
 strefa ograniczonej prędkości
 koniec strefy ograniczonej prędkości
-zakaz wjazdu samochodów ciężarowych o rzeczywistej masie całkowitej ponad …t
+zakaz wjazdu samochodów ciężarowych
 zakaz wjazdu pojazdów innych niż samochodowe
 zakaz wjazdu pojazdów zaprzęgowych
 zakaz wjazdu rowerów
