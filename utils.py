@@ -72,12 +72,14 @@ def draw_rectangle_on_image_from_bounding_box(image, bounding_box):
 
 
 def draw_rectangles_and_text_on_image_from_bounding_boxes(image, bounding_boxes, texts):
+    img = image.copy()
+    
     for (index, bounding_box) in enumerate(bounding_boxes):
         bounding_rect = bounding_box_to_bounding_rect(bounding_box)
-        image = draw_rectangle_on_image(image, bounding_rect)
-        image = draw_text_under_object_on_image(image, bounding_rect, texts[index])
+        img = draw_rectangle_on_image(img, bounding_rect)
+        img = draw_text_under_object_on_image(img, bounding_rect, texts[index])
 
-    return image
+    return img
 
 
 def draw_text_under_object_on_image(image, object_bounding_rect, text, margin=5):

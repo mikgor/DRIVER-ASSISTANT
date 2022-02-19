@@ -21,16 +21,21 @@ def mouse_on_click(mouse_click_positions, image_shape, bounding_boxes, class_ids
     x -= offset_x
     y -= offset_y
 
-    if w >= x >= window_x and h >= y >= window_y:
-        print(x, y)
+    if w + window_x >= x >= window_x and h + window_y >= y >= window_y:
+        x -= window_x
+        y -= window_y
         mouse_click_positions.append((x, y))
+        print(x, y)
 
         if len(mouse_click_positions) % 2 == 0:
             bounding_boxes.append((*mouse_click_positions[-2], *mouse_click_positions[-1]))
+
             class_ids.append(str(default_class_id))
-            provided_id = input(f"Class ID for ({x}, {y}): ")
+            provided_id = input(f"Class ID for {mouse_click_positions[-2]}, ({x}, {y}): ")
             if provided_id != '':
                 class_ids[-1] = provided_id
+
+            print(f"{mouse_click_positions[-2]}, ({x}, {y}) - {class_ids[-1]}")
 
 
 def update_and_show_image(image, image_path, bounding_boxes, class_ids):
