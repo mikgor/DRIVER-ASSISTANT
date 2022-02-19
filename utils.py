@@ -71,6 +71,15 @@ def draw_rectangle_on_image_from_bounding_box(image, bounding_box):
     return draw_rectangle_on_image(image, bounding_rect)
 
 
+def draw_rectangles_and_text_on_image_from_bounding_boxes(image, bounding_boxes, texts):
+    for (index, bounding_box) in enumerate(bounding_boxes):
+        bounding_rect = bounding_box_to_bounding_rect(bounding_box)
+        image = draw_rectangle_on_image(image, bounding_rect)
+        image = draw_text_under_object_on_image(image, bounding_rect, texts[index])
+
+    return image
+
+
 def draw_text_under_object_on_image(image, object_bounding_rect, text, margin=5):
     (x, y, w, h) = object_bounding_rect
     text = text.capitalize()
@@ -119,6 +128,10 @@ def draw_text_under_object_on_image_from_bounding_box(image, bounding_box, text,
     bounding_rect = bounding_box_to_bounding_rect(bounding_box)
 
     return draw_text_under_object_on_image(image, bounding_rect, text, margin)
+
+
+def get_gtsrb_df():
+    return pd.DataFrame(columns=['Width', 'Height', 'Roi.X1', 'Roi.Y1', 'Roi.X2', 'Roi.Y2', 'ClassId', 'Path'])
 
 
 def read_gtsrb_csv_row(row):
@@ -216,7 +229,7 @@ def generate_augmented_images_and_bounding_boxes_dataset(data_annotations_path, 
 
     images_aug, bbs_aug = seq(images=images, bounding_boxes=bounding_boxes)
 
-    df = pd.DataFrame(columns=['Width', 'Height', 'Roi.X1', 'Roi.Y1', 'Roi.X2', 'Roi.Y2', 'ClassId', 'Path'])
+    df = get_gtsrb_df()
 
     for (index, image) in enumerate(images_aug):
         for (o, bbox) in enumerate(bbs_aug[index]):
