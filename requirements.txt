@@ -16,3 +16,4 @@ tensorflow-gpu==2.7.0
 scipy==1.4.1
 Pillow==8.4.0
 tqdm==4.62.3
+mouse==0.7.1
