@@ -1,13 +1,14 @@
 import os
-
 import cv2
+import pandas as pd
 import mouse
 
 from utils import get_gtsrb_df, load_and_transform_image, draw_rectangles_and_text_on_image_from_bounding_boxes
 
 images_folder_path = 'data/detection/Train_frames'
-image_prefix_path = 'Train_frames/'
+image_prefix_path = 'Train_frames'
 save_path = 'data/detection/train_frames.csv'
+create_new_df = False
 window_x = 0
 window_y = 230
 offset_x = 8
@@ -45,8 +46,13 @@ def update_and_show_image(image, image_path, bounding_boxes, class_ids):
     cv2.imshow(image_path, image)
 
 
-df = get_gtsrb_df()
+df = get_gtsrb_df() if create_new_df else pd.read_csv(save_path)
+paths = df['Path'].tolist()
+
 for image_name in os.listdir(images_folder_path):
+    if '{}/{}'.format(image_prefix_path, image_name) in paths:
+        continue
+
     image_path = '{}/{}'.format(images_folder_path, image_name)
     image = load_and_transform_image(image_path, None)
     shape = image.shape
@@ -70,7 +76,7 @@ for image_name in os.listdir(images_folder_path):
             for (index, box) in enumerate(bounding_boxes):
                 start_x, start_y, end_x, end_y = box
                 df.loc[len(df)] = [shape[1], shape[0], start_x, start_y, end_x, end_y, class_ids[index],
-                                   os.path.join(image_prefix_path, image_name)]
+                                   '{}/{}'.format(image_prefix_path, image_name)]
             df.to_csv(save_path, index=False)
             break
         else:
