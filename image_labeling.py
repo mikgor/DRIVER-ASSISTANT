@@ -5,11 +5,11 @@ import mouse
 
 from utils import get_gtsrb_df, load_and_transform_image, draw_rectangles_and_text_on_image_from_bounding_boxes
 
-images_folder_path = 'data/detection/Train'
-image_prefix_path = 'Train/'
-save_path = 'data/detection/train.csv'
+images_folder_path = 'data/detection/Train_frames'
+image_prefix_path = 'Train_frames/'
+save_path = 'data/detection/train_frames.csv'
 window_x = 0
-window_y = 0
+window_y = 230
 offset_x = 8
 offset_y = 31
 default_class_id = 1
@@ -70,7 +70,7 @@ for image_name in os.listdir(images_folder_path):
             for (index, box) in enumerate(bounding_boxes):
                 start_x, start_y, end_x, end_y = box
                 df.loc[len(df)] = [shape[1], shape[0], start_x, start_y, end_x, end_y, class_ids[index],
-                                   os.path.join(image_prefix_path, image_path)]
+                                   os.path.join(image_prefix_path, image_name)]
             df.to_csv(save_path, index=False)
             break
         else:
