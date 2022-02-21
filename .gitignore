@@ -111,7 +111,13 @@ pip-selfcheck.json
 # mpeltonen/sbt-idea plugin
 .idea_modules/
 
-/data
-data/classification/models/my_model
-data/classification/models/new_model
-*model.*
+main*.py
+/data/test
+/data/old_models
+/data/classification
+/data/detection/enet/model.net
+/data/detection/models
+/data/detection/Test
+/data/detection/Train
+/data/detection/test.csv
+/data/detection/train.csv

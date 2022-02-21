@@ -17,8 +17,12 @@ DRIVER ASSISTANT (DA) is an application that detects and classifies Polish road 
    ```
 
 ### Data sources
+* Test data (data/test) - Google Street View
+    * Test images (data/test/images) - Google Street View & Google Graphics
+    * Test signs (data/test/signs) - Selected from data/classification/train
+    * Test videos (data/test/videos) - YouTube
 * Detection
-    * Train (data/detection/train) with annotations (data/detection/train.csv) [39 270 images] and Test data (data/detection/test) with annotations (data/detection/test.csv) [12 630 images] - https://www.kaggle.com/meowmeowmeowmeowmeow/gtsrb-german-traffic-sign
-    * Test data (data/detection/images) - Google Street View
+    * Train (data/detection/Train) with annotations (data/detection/train.csv) [39 270 images] and Test data (data/detection/Test) with annotations (data/detection/test.csv) [12 630 images] - https://www.kaggle.com/meowmeowmeowmeowmeow/gtsrb-german-traffic-sign
+    * Train_frames (data/detection/Train_frames) [317 images] - YouTube & Google Graphics
 * Classification: 
     * Train (data/classification/train) [16 702 images] and test data (data/classification/test) [4 298 images]- https://www.kaggle.com/kasia12345/polish-traffic-signs-dataset
