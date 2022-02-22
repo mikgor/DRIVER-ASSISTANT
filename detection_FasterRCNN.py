@@ -1,3 +1,4 @@
+import tensorflow   # for Microsoft Azure Machine Learning
 import cv2
 import numpy as np
 import pandas as pd
@@ -9,7 +10,7 @@ import torch
 import matplotlib.pyplot as plt
 import time
 
-from utils import collate_fn, transform_to_tensor_v2
+from utils import collate_fn, transform_to_tensor_v2, read_file_lines
 from utils import read_gtsrb_csv_row, generate_augmented_images_and_bounding_boxes_dataset, \
     draw_rectangle_on_image_from_bounding_box
 
@@ -20,6 +21,9 @@ class RoadSignDataset(Dataset):
         self.classes = classes
         self.all_images = []
 
+        # More classes than Background and Object
+        self.multi_labels = len(classes) > 2
+
         annotations = pd.read_csv(annotations_path)
 
         skipped_indices = []
@@ -28,21 +32,23 @@ class RoadSignDataset(Dataset):
                 skipped_indices.remove(index)
             else:
                 bounding_boxes = []
+                labels = []
                 path = row['Path']
 
                 path_all_bounding_boxes_rows = annotations.loc[annotations['Path'] == path]
                 skipped_indices = skipped_indices + list(path_all_bounding_boxes_rows.index.values)[1:]
 
                 for _, bounding_box_row in path_all_bounding_boxes_rows.iterrows():
-                    _, _, start_x, start_y, end_x, end_y, _, _ = read_gtsrb_csv_row(bounding_box_row)
+                    _, _, start_x, start_y, end_x, end_y, class_id, _ = read_gtsrb_csv_row(bounding_box_row)
                     bounding_boxes.append([start_x, start_y, end_x, end_y])
+                    labels.append(int(class_id) if self.multi_labels else 1)
 
                 img_path = data_path + path
 
-                self.all_images.append((img_path, bounding_boxes))
+                self.all_images.append((img_path, bounding_boxes, labels))
 
     def __getitem__(self, idx):
-        img_path, bounding_boxes = self.all_images[idx]
+        img_path, bounding_boxes, labels = self.all_images[idx]
         image = cv2.imread(img_path)
 
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
@@ -53,11 +59,9 @@ class RoadSignDataset(Dataset):
         image_width = image.shape[1]
 
         boxes = []
-        labels = []
 
         for box in bounding_boxes:
             (start_x, start_y, end_x, end_y) = box
-            labels.append(self.classes.index('Road_sign'))
             start_x = (start_x / image_width) * self.width
             end_x = (end_x / image_width) * self.width
             start_y = (start_y / image_height) * self.height
@@ -94,7 +98,7 @@ class RoadSignFasterRCNNDetection:
         self.shape = (512, 512)
         self.epochs = 10
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        self.classes = ['background', 'Road_sign']
+        self.classes = ['background'] + [str(c) for c in range(1, len(read_file_lines('labels.txt')))]
         self.classes_number = len(self.classes)
         self.model_dir_path = 'data/detection/models/fasterrcnn'
         self.save_plot_after_x_epochs = 1
