@@ -1,0 +1,40 @@
+classification:
+  labels_path: 'labels.txt'
+  label_names_path: 'label_names.txt'
+  shape: 100
+  model_path: 'data/classification/models/model'
+  save_trained_model: true
+  save_trained_model_path: 'data/classification/models/new_model'
+  test_data_path: 'data/classification/test'
+  train_data_path: 'data/classification/train'
+  augment_train_data: false
+
+detection:
+  batch_size: 4
+  shape: 512
+  epochs: 10
+  first_object_class_id: 1
+  data_path: 'data/detection/'
+  labels_path: 'labels.txt'
+  train_data_annotations_path: 'data/detection/train.csv'
+  validation_data_annotations_path: 'data/detection/test.csv'
+  augment_datasets: false
+  model_path: 'data/detection/models/fasterrcnn/model15.pth'
+  model_dir_path: 'data/detection/models/fasterrcnn'
+  save_plot_after_x_epochs: 1
+  save_model_after_x_epochs: 1
+  detection_threshold: 0.6
+
+segmentation:
+  labels_to_detect:
+    - 'TrafficSign'
+  load_model_path: 'data/detection/enet/model.net'
+  labels_path: 'data/detection/enet/classes.txt'
+  colors_path: 'data/detection/enet/colors.txt'
+
+startup:
+  mode_selected_option: null
+  function_selected_option: null
+  detection_and_classification_path: 'data/test/images'
+  classification_path: 'data/test/signs'
+  semantic_segmentation_path: 'data/test/images'

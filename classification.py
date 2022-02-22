@@ -9,31 +9,22 @@ np.random.seed(1)
 
 
 class RoadSignClassification:
-    def __init__(self, test_data_path='data/classification/test', augment_train_data=False):
-        self.labels = read_file_lines('labels.txt')
-        self.label_names = read_file_lines('label_names.txt')
+    def __init__(self, config, mode='train'):
+        self.labels = read_file_lines(config['labels_path'])
+        self.label_names = read_file_lines(config['label_names_path'])
 
-        self.shape = (100, 100)
-        self.load_saved_model = True
-        self.load_model_path = 'data/classification/models/my_model'
-        self.save_trained_model = True
-        self.save_trained_model_path = 'data/classification/models/new_model'
+        self.shape = (config['shape'], config['shape'])
+        self.model_path = config['model_path']
+        self.save_trained_model = config['save_trained_model']
+        self.save_trained_model_path = config['save_trained_model_path']
+        self.test_data_path = config['test_data_path']
 
-        if test_data_path is not None:
-            # Obtaining testing data
-            print("Obtaining testing data...")
-            self.test_images, self.test_labels = self.get_data(test_data_path)
-
-        # Obtaining model
-        if self.load_saved_model:
-            print("Loading model...")
-            self.model = self.load_model(self.load_model_path)
-        else:
+        if mode == 'train':
             self.model = self.get_model()
 
             # Obtaining training data
             print("Obtaining training data...")
-            self.train_images, self.train_labels = self.get_data('data/classification/train', augment_train_data)
+            self.train_images, self.train_labels = self.get_data(config['train_data_path'], config['augment_train_data'])
             # Turn a single categorical column into many indicator columns (A-1, A-11, A-11a, ...)
             self.train_labels = pd.get_dummies(self.train_labels).values
 
@@ -43,7 +34,7 @@ class RoadSignClassification:
                 self.train_images, self.train_labels, random_state=1)
 
             print("Training model...")
-            self.train_model(train_x, train_y, validation_x, validation_y)
+            self.history = self.train_model(train_x, train_y, validation_x, validation_y)
 
             if self.save_trained_model:
                 print("Saving model...")
@@ -54,6 +45,10 @@ class RoadSignClassification:
 
             self.save_history_metric('acc')
             self.save_history_metric('loss')
+
+        elif mode == 'inference':
+            print("Loading model...")
+            self.model = self.load_model(self.model_path)
 
         self.model.summary()
         self.show_history()
@@ -126,14 +121,14 @@ class RoadSignClassification:
         return tensorflow.keras.models.load_model(path)
 
     def show_history(self):
-        if self.load_saved_model:
-            print(pd.read_csv('{}.log'.format(self.load_model_path), sep=',', engine='python'))
+        if self.model_path:
+            print(pd.read_csv('{}.log'.format(self.model_path), sep=',', engine='python'))
         else:
             print(self.model.history)
 
     def save_history_metric(self, metric):
-        plt.plot(self.model.history[metric])
-        plt.plot(self.model.history['val_{}'.format(metric)])
+        plt.plot(self.history.history[metric])
+        plt.plot(self.history.history['val_{}'.format(metric)])
         plt.title('model {}'.format(metric))
         plt.ylabel(metric)
         plt.xlabel('epoch')
@@ -145,12 +140,15 @@ class RoadSignClassification:
         return self.model.evaluate(validation_x, validation_y)
 
     def model_predict_test_data(self, show_images=False):
+        print("Obtaining testing data...")
+        test_images, test_labels = self.get_data(self.test_data_path)
+
         predicted = 0
         total = len(self.test_images)
 
         for index in range(total):
-            image = self.test_images[index:index+1]
-            image_label = self.test_labels[index:index+1][0]
+            image = test_images[index:index+1]
+            image_label = test_labels[index:index+1][0]
             max_label_index = self.model_predict_max_label_index(image)
             predicted_label = self.labels[max_label_index]
             predicted_label_name = self.label_names[max_label_index]

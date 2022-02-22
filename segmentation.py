@@ -71,8 +71,7 @@ class RoadSignSegmentation:
         color_mask = cv2.resize(color_mask, (image.shape[1], image.shape[0]), interpolation=cv2.INTER_NEAREST)
 
         if show_masked_image:
-            self.show_masked_image(image, color_mask)
-            cv2.waitKey(0)
+            self.show_masked_image(image_path, image, color_mask)
 
         if show_legend:
             self.show_legend()
@@ -87,11 +86,11 @@ class RoadSignSegmentation:
 
         return bounding_rects, signs
 
-    def show_masked_image(self, image, mask):
+    def show_masked_image(self, image_path, image, mask):
         image_opacity = 0.45
         mask_opacity = 1 - image_opacity
         image_with_mask = ((image_opacity * image) + (mask_opacity * mask)).astype("uint8")
-        cv2.imshow("Detections", image_with_mask)
+        cv2.imshow(f"Segmentation {image_path}", image_with_mask)
 
     def show_legend(self):
         label_color_width = 250

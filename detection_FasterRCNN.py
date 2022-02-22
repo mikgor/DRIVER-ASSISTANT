@@ -1,4 +1,3 @@
-import tensorflow   # for Microsoft Azure Machine Learning
 import cv2
 import numpy as np
 import pandas as pd
@@ -16,7 +15,7 @@ from utils import read_gtsrb_csv_row, generate_augmented_images_and_bounding_box
 
 
 class RoadSignDataset(Dataset):
-    def __init__(self, annotations_path, shape, classes, data_path='data/detection/'):
+    def __init__(self, data_path, annotations_path, shape, classes):
         self.height, self.width = shape
         self.classes = classes
         self.all_images = []
@@ -89,35 +88,33 @@ class RoadSignDataset(Dataset):
 
 
 class RoadSignFasterRCNNDetection:
-    def __init__(self, train_data_annotations_path='data/detection/train.csv',
-                 validation_data_annotations_path='data/detection/test.csv',
-                 augment_datasets=False, mode='train',
-                 model_path='data/detection/models/fasterrcnn/model15.pth'):
+    def __init__(self, config, mode='train'):
 
-        self.batch_size = 4
-        self.shape = (512, 512)
-        self.epochs = 10
+        self.batch_size = config['batch_size']
+        self.shape = (config['shape'], config['shape'])
+        self.epochs = config['epochs']
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        self.classes = ['background'] + [str(c) for c in range(1, len(read_file_lines('labels.txt')))]
+        self.classes = ['background'] + [str(c) for c in range(config['first_object_class_id'],
+                                         len(read_file_lines(config['labels_path'])) + config['first_object_class_id'])]
         self.classes_number = len(self.classes)
-        self.model_dir_path = 'data/detection/models/fasterrcnn'
-        self.save_plot_after_x_epochs = 1
-        self.save_model_after_x_epochs = 1
+        self.model_dir_path = config['model_dir_path']
+        self.save_plot_after_x_epochs = config['save_plot_after_x_epochs']
+        self.save_model_after_x_epochs = config['save_model_after_x_epochs']
 
         if mode == 'train':
-            if train_data_annotations_path is not None:
-                self.train_data_loader = self.get_data_loader('Training', augment_datasets,
-                                                              train_data_annotations_path, shuffle=True)
+            self.train_data_loader = self.get_data_loader('Training', config['augment_datasets'], config['data_path'],
+                                                          config['train_data_annotations_path'], shuffle=True)
 
-            if validation_data_annotations_path is not None:
-                self.validation_data_loader = self.get_data_loader('Validating', augment_datasets,
-                                                                   validation_data_annotations_path)
+            self.validation_data_loader = self.get_data_loader('Validating', config['augment_datasets'],
+                                                               config['data_path'],
+                                                               config['validation_data_annotations_path'])
+
+            self.train_model()
+
         elif mode == 'inference':
-            self.model = self.load_model(model_path)
-        else:
-            pass
+            self.model = self.load_model(config['model_path'])
 
-    def get_data_loader(self, name, augment_datasets, data_annotations_path, shuffle=False):
+    def get_data_loader(self, name, augment_datasets, data_path, data_annotations_path, shuffle=False):
         print(f"Obtaining {name} data...")
 
         if augment_datasets:
@@ -125,7 +122,7 @@ class RoadSignFasterRCNNDetection:
             data_annotations_path = generate_augmented_images_and_bounding_boxes_dataset(
                 data_annotations_path, combine_randomly=True)
 
-        dataset = RoadSignDataset(data_annotations_path, self.shape, self.classes)
+        dataset = RoadSignDataset(data_path, data_annotations_path, self.shape, self.classes)
         print(f"{name} data length: {len(dataset)}")
 
         return DataLoader(dataset, batch_size=self.batch_size, shuffle=shuffle, num_workers=0, collate_fn=collate_fn)
@@ -261,8 +258,12 @@ class RoadSignFasterRCNNDetection:
             if current_epoch == self.epochs or current_epoch % self.save_plot_after_x_epochs == 0:
                 self.generate_and_save_loss_plots(train_loss_list, val_loss_list, current_epoch)
 
-    def predict_boxes_and_images(self, image_path, detection_threshold=0.6):
-        image = cv2.imread(image_path)
+    def predict_boxes_and_images(self, image_path, detection_threshold=0.77):
+        image = image_path
+
+        if type(image_path) == str:
+            image = cv2.imread(image_path)
+
         original_image = image.copy()
         # Image from BGR to RGB and the pixel range between 0 and 1
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)

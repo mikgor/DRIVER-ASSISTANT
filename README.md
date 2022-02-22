@@ -15,8 +15,11 @@ DRIVER ASSISTANT (DA) is an application that detects and classifies Polish road 
    ```
    pip3 install -r requirements.txt
    ```
+### Configuration
+1. Change working directory to `DRIVER-ASSISTANT/configurations`.
+2. Create a copy of config.yaml named _config.yaml and adjust parameters if needed.
 
-### Data sources
+## Data sources
 * Test data (data/test) - Google Street View
     * Test images (data/test/images) - Google Street View & Google Graphics
     * Test signs (data/test/signs) - Selected from data/classification/train

@@ -121,3 +121,4 @@ main*.py
 /data/detection/Train
 /data/detection/test.csv
 /data/detection/train.csv
+/configurations/_*
