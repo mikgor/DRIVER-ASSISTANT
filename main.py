@@ -1,4 +1,5 @@
 import os
+import sys
 
 import cv2
 import yaml
@@ -12,7 +13,12 @@ from utils import load_and_transform_image, draw_rectangles_and_text_on_image_fr
 
 
 def load_configuration():
-    with open('configurations/_config.yaml', 'r') as stream:
+    config_path = 'configurations/_config.yaml'
+
+    if len(sys.argv) > 1:
+        config_path = sys.argv[1]
+
+    with open(config_path, 'r') as stream:
         try:
             return yaml.safe_load(stream)
         except yaml.YAMLError as exc:
