@@ -5,8 +5,6 @@ from sklearn.model_selection import train_test_split
 
 from utils import *
 
-np.random.seed(1)
-
 
 class RoadSignClassification:
     def __init__(self, config, mode='train'):
@@ -24,7 +22,9 @@ class RoadSignClassification:
 
             # Obtaining training data
             print("Obtaining training data...")
-            self.train_images, self.train_labels = self.get_data(config['train_data_path'], config['augment_train_data'])
+            self.train_images, self.train_labels = self.get_data(
+                config['train_data_path'], config['datasets_augmentation'])
+
             # Turn a single categorical column into many indicator columns (A-1, A-11, A-11a, ...)
             self.train_labels = pd.get_dummies(self.train_labels).values
 
@@ -56,7 +56,7 @@ class RoadSignClassification:
     def load_and_resize_image(self, path):
         return load_and_transform_image(path, self.shape)
 
-    def get_data(self, path, augment_data=False):
+    def get_data(self, path, config=None):
         images = []
         image_labels = []
 
@@ -67,20 +67,11 @@ class RoadSignClassification:
                 images.append(image)
                 image_labels.append(sign_code)
 
-        if augment_data:
+        if config and config['augment_train_dataset']:
             print('Augmenting dataset...')
-            images_copy = images.copy()
+            images, _, _, _ = augment_dataset(config['augment_type'], images)
+
             image_labels_copy = image_labels.copy()
-
-            seq = iaa.Sequential([
-                iaa.BlendAlpha(0.5, iaa.Grayscale(1.0)),
-                iaa.GammaContrast((0.5, 2.0)),
-                iaa.SigmoidContrast(gain=(3, 10), cutoff=(0.4, 0.6))
-            ])
-
-            images_aug = seq(images=images_copy)
-
-            images = images + images_aug
             image_labels = image_labels + image_labels_copy
 
         return np.array(images), image_labels

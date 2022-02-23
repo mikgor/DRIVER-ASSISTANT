@@ -102,25 +102,26 @@ class RoadSignFasterRCNNDetection:
         self.save_model_after_x_epochs = config['save_model_after_x_epochs']
 
         if mode == 'train':
-            self.train_data_loader = self.get_data_loader('Training', config['augment_datasets'], config['data_path'],
-                                                          config['train_data_annotations_path'], shuffle=True)
+            self.train_data_loader = self.get_data_loader('Training', config['data_path'],
+                                                          config['train_data_annotations_path'],
+                                                          config['datasets_augmentation'], shuffle=True)
 
-            self.validation_data_loader = self.get_data_loader('Validating', config['augment_datasets'],
-                                                               config['data_path'],
-                                                               config['validation_data_annotations_path'])
+            self.validation_data_loader = self.get_data_loader('Validating', config['data_path'],
+                                                               config['validation_data_annotations_path'],
+                                                               config['datasets_augmentation'])
 
             self.train_model()
 
         elif mode == 'inference':
             self.model = self.load_model(config['model_path'])
 
-    def get_data_loader(self, name, augment_datasets, data_path, data_annotations_path, shuffle=False):
+    def get_data_loader(self, name, data_path, data_annotations_path, config, shuffle=False):
         print(f"Obtaining {name} data...")
 
-        if augment_datasets:
+        if config['augment_datasets']:
             print(f"Obtaining augmented {name} data...")
             data_annotations_path = generate_augmented_images_and_bounding_boxes_dataset(
-                data_annotations_path, combine_randomly=True)
+                data_annotations_path, data_path, combine_randomly=config['combine_randomly'])
 
         dataset = RoadSignDataset(data_path, data_annotations_path, self.shape, self.classes)
         print(f"{name} data length: {len(dataset)}")

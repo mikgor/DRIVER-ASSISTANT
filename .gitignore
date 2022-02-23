@@ -117,6 +117,8 @@ main*.py
 /data/classification
 /data/detection/enet/model.net
 /data/detection/models
+/data/detection/Augmented
+/data/detection/*augmented*
 /data/detection/Test
 /data/detection/Train
 /data/detection/test.csv

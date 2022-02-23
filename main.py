@@ -2,6 +2,8 @@ import os
 
 import cv2
 import yaml
+import numpy as np
+import imgaug as ia
 
 from classification import RoadSignClassification
 from detection_FasterRCNN import RoadSignFasterRCNNDetection
@@ -104,4 +106,9 @@ def display_menu(config):
 
 if __name__ == '__main__':
     config = load_configuration()
+
+    seed = config['startup']['seed']
+    ia.seed(seed)
+    np.random.seed(seed)
+
     display_menu(config)

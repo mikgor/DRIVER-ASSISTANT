@@ -1,5 +1,6 @@
 import os
 import random
+import time
 
 import cv2
 import matplotlib.pyplot as plt
@@ -149,6 +150,12 @@ def read_gtsrb_csv_row(row):
     return width, height, start_x, start_y, end_x, end_y, class_id, path
 
 
+def add_timestamp_before_file_extension(file_path):
+    file_path_dot_split = file_path.split('.')
+
+    return file_path_dot_split[0] + '_' + str(time.time()) + '.' + file_path_dot_split[1]
+
+
 def combine_images_horizontally(image1, image2, image2_bounding_boxes=None, margin=None):
     if margin is None:
         margin = random.randint(0, 200)
@@ -172,16 +179,55 @@ def combine_images_horizontally(image1, image2, image2_bounding_boxes=None, marg
     return combined, updated_bounding_boxes
 
 
+def augment_dataset(augment_type, images, bounding_boxes=None, class_ids=None, image_paths=None):
+    def augment_duplicate_contrast_affine_and_combine(n_images, n_bounding_boxes=None,
+                                                      n_class_ids=None, n_image_paths=None):
+        images_copy = n_images.copy()
+        bounding_boxes_copy = None if n_bounding_boxes is None else n_bounding_boxes.copy()
+
+        seq = iaa.Sequential([
+            iaa.LinearContrast((0.75, 1.5)),
+            iaa.Affine(
+                translate_percent={"x": (-0.1, 0.1), "y": (-0.1, 0.1)},
+                rotate=(-5, 5),
+            )
+        ], random_order=True)
+
+        images_aug, bounding_boxes_aug = seq(images=images_copy, bounding_boxes=bounding_boxes_copy)
+        n_images += images_aug
+
+        if n_bounding_boxes is not None:
+            n_bounding_boxes += bounding_boxes_aug
+
+        if n_class_ids is not None:
+            n_class_ids += n_class_ids
+
+        if n_image_paths is not None:
+            n_image_paths += n_image_paths
+
+        return n_images, n_bounding_boxes, n_class_ids, n_image_paths
+
+    def augment_resize_and_pad(n_images, n_bounding_boxes=None):
+        seq = iaa.Sequential([
+            iaa.Resize((0.9, 1.5)),
+            iaa.PadToFixedSize(width=600, height=400, pad_mode=[
+                "constant", "edge", "maximum", "mean", "median", "minimum"]),
+        ])
+
+        return seq(images=n_images, bounding_boxes=n_bounding_boxes)
+
+    if augment_type == 0:
+        return augment_duplicate_contrast_affine_and_combine(images, bounding_boxes, class_ids, image_paths)
+    elif augment_type == 1:
+        return *augment_resize_and_pad(images, bounding_boxes), class_ids, image_paths
+
+    return images, bounding_boxes, class_ids, image_paths
+
+
 def generate_augmented_images_and_bounding_boxes_dataset(data_annotations_path, data_path='data/detection/',
                                                          augmented_data_annotations_path_infix='_augmented',
-                                                         augmented_data_path='Augmented/',
+                                                         augmented_data_path='Augmented/', augment_type=0,
                                                          combine_randomly=False, combined_class_id='x'):
-    seq = iaa.Sequential([
-        iaa.Resize((0.9, 1.5)),
-        iaa.PadToFixedSize(width=600, height=400, pad_mode=[
-            "constant", "edge", "maximum", "mean", "median", "minimum"]),
-    ])
-
     data = pd.read_csv(data_annotations_path)
     images = []
     image_paths = []
@@ -229,7 +275,8 @@ def generate_augmented_images_and_bounding_boxes_dataset(data_annotations_path, 
         class_ids.append(c_ids)
         bounding_boxes.append(boxes)
 
-    images_aug, bbs_aug = seq(images=images, bounding_boxes=bounding_boxes)
+    images_aug, bbs_aug, class_ids, image_paths = \
+        augment_dataset(augment_type, images, bounding_boxes, class_ids, image_paths)
 
     df = get_gtsrb_df()
 
@@ -239,18 +286,21 @@ def generate_augmented_images_and_bounding_boxes_dataset(data_annotations_path, 
             start_y = int(bbox.y1)
             end_x = int(bbox.x2)
             end_y = int(bbox.y2)
-            img_path = os.path.join(data_path, augmented_data_path, image_paths[index])
+            img_name = add_timestamp_before_file_extension(image_paths[index])
+            img_path = os.path.join(data_path, augmented_data_path, img_name)
             height, width = image.shape[:2]
 
             os.makedirs('/'.join(img_path.split('/')[0:-1]), exist_ok=True)
             cv2.imwrite(img_path, image)
 
             df.loc[len(df)] = [width, height, start_x, start_y, end_x, end_y, class_ids[index][o],
-                               os.path.join(augmented_data_path, image_paths[index])]
+                               os.path.join(augmented_data_path, img_name)]
 
     data_annotations_path_split = data_annotations_path.split('.')
-    augmented_data_annotations_path = data_annotations_path_split[0] \
-                                    + augmented_data_annotations_path_infix + '.' + data_annotations_path_split[1]
+    augmented_data_annotations_path = add_timestamp_before_file_extension(
+        data_annotations_path.split('.')[0] + augmented_data_annotations_path_infix
+        + '.' + data_annotations_path_split[1]
+    )
 
     df.to_csv(augmented_data_annotations_path, index=False)
 
