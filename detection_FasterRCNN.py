@@ -1,3 +1,5 @@
+import os
+
 import cv2
 import numpy as np
 import pandas as pd
@@ -195,6 +197,7 @@ class RoadSignFasterRCNNDetection:
         return model
 
     def model_save(self, model, epoch):
+        os.makedirs(self.model_dir_path, exist_ok=True)
         torch.save(model.state_dict(), f"{self.model_dir_path}/model{epoch}.pth")
         print('Model saved\n')
 
@@ -203,6 +206,7 @@ class RoadSignFasterRCNNDetection:
         ax.plot(loss_list, color=color)
         ax.set_xlabel('iterations')
         ax.set_ylabel(f'{name} loss')
+        os.makedirs(self.model_dir_path, exist_ok=True)
         figure.savefig(f"{self.model_dir_path}/{name}_loss_{epoch}.png")
 
     def generate_and_save_loss_plots(self, train_loss_list, validation_loss_list, epoch):
