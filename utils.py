@@ -180,17 +180,16 @@ def combine_images_horizontally(image1, image2, image2_bounding_boxes=None, marg
 
 
 def augment_dataset(augment_type, images, bounding_boxes=None, class_ids=None, image_paths=None):
-    def augment_duplicate_contrast_affine_and_combine(n_images, n_bounding_boxes=None,
-                                                      n_class_ids=None, n_image_paths=None):
+    def augment_duplicate_contrast_and_combine(n_images, n_bounding_boxes=None,
+                                               n_class_ids=None, n_image_paths=None):
         images_copy = n_images.copy()
         bounding_boxes_copy = None if n_bounding_boxes is None else n_bounding_boxes.copy()
 
         seq = iaa.Sequential([
             iaa.LinearContrast((0.75, 1.5)),
-            iaa.Affine(
-                translate_percent={"x": (-0.1, 0.1), "y": (-0.1, 0.1)},
-                rotate=(-5, 5),
-            )
+            iaa.BlendAlpha(0.5, iaa.Grayscale(1.0)),
+            iaa.GammaContrast((0.5, 2.0)),
+            iaa.SigmoidContrast(gain=(3, 10), cutoff=(0.4, 0.6))
         ], random_order=True)
 
         images_aug, bounding_boxes_aug = seq(images=images_copy, bounding_boxes=bounding_boxes_copy)
@@ -217,7 +216,7 @@ def augment_dataset(augment_type, images, bounding_boxes=None, class_ids=None, i
         return seq(images=n_images, bounding_boxes=n_bounding_boxes)
 
     if augment_type == 0:
-        return augment_duplicate_contrast_affine_and_combine(images, bounding_boxes, class_ids, image_paths)
+        return augment_duplicate_contrast_and_combine(images, bounding_boxes, class_ids, image_paths)
     elif augment_type == 1:
         return *augment_resize_and_pad(images, bounding_boxes), class_ids, image_paths
 
