@@ -153,19 +153,21 @@ class RoadSignClassification:
 
         print('Prediction accuracy: {}% ({}/{}).'.format(predicted*100/total, predicted, total))
 
-    def model_predict_data(self, images, show_images=False):
+    def model_predict_data(self, images, show_images=False, return_label_name=True):
+        predicted_label_ids = []
         predicted_labels = []
 
         for image in images:
             image = cv2.resize(image, self.shape)
             max_label_index = self.model_predict_max_label_index(image)
             predicted_label_name = self.label_names[max_label_index]
+            predicted_label_ids.append(max_label_index)
             predicted_labels.append(predicted_label_name)
 
             if show_images:
                 show_image_with_title(image, predicted_label_name)
 
-        return predicted_labels
+        return predicted_labels if return_label_name else predicted_label_ids
 
     def model_predict_max_label_index(self, image):
         if len(image.shape) == 3:

@@ -286,14 +286,16 @@ class RoadSignFasterRCNNDetection:
         outputs = [{k: v.to('cpu') for k, v in t.items()} for t in outputs]
 
         boxes = outputs[0]['boxes'].data.numpy()
+        label_ids = outputs[0]['labels'].data.numpy()
         scores = outputs[0]['scores'].data.numpy()
+
         bounding_boxes = boxes[scores >= detection_threshold].astype(np.int32)
 
         images = []
         for (start_x, start_y, end_x, end_y) in bounding_boxes:
             images.append(original_image.astype("uint8")[start_y:end_y, start_x:end_x])
 
-        return bounding_boxes, images
+        return bounding_boxes, images, label_ids, scores
 
     def predict_and_draw_boxes(self, image_path):
         image = cv2.imread(image_path)

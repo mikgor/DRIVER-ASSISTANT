@@ -42,5 +42,6 @@ startup:
   mode_selected_option: null
   function_selected_option: null
   detection_and_classification_path: 'data/test/images'
+  detection_and_classification_videos_path: 'data/test/videos'
   classification_path: 'data/test/signs'
   semantic_segmentation_path: 'data/test/images'
