@@ -32,15 +32,18 @@ detection:
 
 segmentation:
   labels_to_detect:
-    - 'TrafficSign'
+    - 'TrafficLight'
   load_model_path: 'data/detection/enet/model.net'
   labels_path: 'data/detection/enet/classes.txt'
   colors_path: 'data/detection/enet/colors.txt'
+  detection_min_object_area: 1000
+  masked_image_opacity: 0.3
 
 startup:
   seed: 1
   mode_selected_option: null
   function_selected_option: null
+  detection_and_classification_optional_semantic_segmentation: null
   detection_and_classification_path: 'data/test/images'
   detection_and_classification_videos_path: 'data/test/videos'
   classification_path: 'data/test/signs'

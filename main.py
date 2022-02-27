@@ -9,7 +9,7 @@ import imgaug as ia
 
 from classification import RoadSignClassification
 from detection_FasterRCNN import RoadSignFasterRCNNDetection
-from segmentation import RoadSignSegmentation
+from segmentation import SemanticSegmentation
 from utils import load_and_transform_image, draw_rectangles_and_text_on_image_from_bounding_boxes, get_video_detections, \
     save_video_frame_detections, play_video_with_labels
 
@@ -53,11 +53,20 @@ def display_menu(config):
     mode_selected_option = input_from_options('Model mode', mode_options, startup_config['mode_selected_option'])
 
     if mode_selected_option == 1:
-        inference_function_options = [(1, 'Detection & Classification (images)'),
-                                      (2, 'Detection & Classification (videos)'),
+        inference_function_options = [(1, 'Detection & Classification (images) + Semantic segmentation (optional)'),
+                                      (2, 'Detection & Classification (videos) + Semantic segmentation (optional)'),
                                       (3, 'Classification'), (4, 'Semantic segmentation')]
         inference_function_selected_option = input_from_options('Inference function', inference_function_options,
                                                                 startup_config['function_selected_option'])
+
+        if inference_function_selected_option == 1 or inference_function_selected_option == 2:
+            optional_semantic_segmentation_options = [(1, 'Yes'), (2, 'No')]
+            optional_semantic_segmentation_selected_option = \
+                input_from_options('Apply semantic segmentation', optional_semantic_segmentation_options,
+                                   startup_config['detection_and_classification_optional_semantic_segmentation'])
+
+            if optional_semantic_segmentation_selected_option == 1:
+                segmentation = SemanticSegmentation(config['segmentation'])
 
         if inference_function_selected_option == 1:
             detection = RoadSignFasterRCNNDetection(config['detection'], mode='inference')
@@ -72,6 +81,10 @@ def display_menu(config):
                     image_path, detection_threshold=config['detection']['detection_threshold'])
 
                 predicted_labels = classification.model_predict_data(signs)
+
+                if optional_semantic_segmentation_selected_option == 1:
+                    image, mask, _, _ = segmentation.detect_objects_on_image(image)
+                    image = segmentation.get_masked_image(image, mask)
 
                 image = \
                     draw_rectangles_and_text_on_image_from_bounding_boxes(image, bounding_boxes, predicted_labels)
@@ -123,7 +136,8 @@ def display_menu(config):
                     cap.set(cv2.CAP_PROP_POS_FRAMES, frame_id)
                     success, frame = cap.read()
 
-                play_video_with_labels(cap, df, config['classification'])
+                play_video_with_labels(cap, df, config['classification'],
+                                       segmentation if optional_semantic_segmentation_selected_option == 1 else None)
 
         elif inference_function_selected_option == 3:
             classification = RoadSignClassification(config['classification'], mode='inference')
@@ -138,13 +152,16 @@ def display_menu(config):
             _ = classification.model_predict_data(images, show_images=True)
 
         elif inference_function_selected_option == 4:
-            segmentation = RoadSignSegmentation()
+            segmentation = SemanticSegmentation(config['segmentation'])
             images_folder_path = startup_config['semantic_segmentation_path']
 
             for image_name in os.listdir(images_folder_path):
                 image_path = '{}/{}'.format(images_folder_path, image_name)
+                image = load_and_transform_image(image_path, None)
 
-                _, _ = segmentation.detect_signs_on_image(image_path=image_path, show_masked_image=True)
+                image, mask, bounding_boxes, label_pixel_numbers_coverage = segmentation.detect_objects_on_image(image)
+                image = segmentation.get_masked_image(image, mask)
+                cv2.imshow(image_name, image)
 
         cv2.waitKey(0)
 

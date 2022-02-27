@@ -55,6 +55,13 @@ def bounding_box_to_bounding_rect(bounding_box):
     return bounding_rect
 
 
+def bounding_rect_to_bounding_box(bounding_rect):
+    (x, y, w, h) = bounding_rect
+    bounding_box = (int(x), int(y), int(x + w), int(y + h))
+
+    return bounding_box
+
+
 def draw_rectangle_on_image(image, bounding_rect):
     (x, y, w, h) = bounding_rect
 
@@ -357,7 +364,7 @@ def read_video_csv_row(row):
     return frame_id, start_x, start_y, end_x, end_y, class_id, score
 
 
-def play_video_with_labels(cap, video_df, classification_config):
+def play_video_with_labels(cap, video_df, classification_config, segmentation=None):
     label_names = read_file_lines(classification_config['label_names_path'])
     skipped_indices = []
 
@@ -377,6 +384,11 @@ def play_video_with_labels(cap, video_df, classification_config):
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame_id)
 
         _, frame = cap.read()
+
+        if segmentation is not None:
+            frame, mask, _, _ = segmentation.detect_objects_on_image(frame)
+            frame = segmentation.get_masked_image(frame, mask)
+
         frame = draw_rectangles_and_text_on_image_from_bounding_boxes(frame, bounding_boxes, labels)
 
         cv2.imshow('Video', frame)
