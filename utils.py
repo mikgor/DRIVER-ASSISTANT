@@ -367,6 +367,7 @@ def read_video_csv_row(row):
 def play_video_with_labels(cap, video_df, classification_config, segmentation=None):
     label_names = read_file_lines(classification_config['label_names_path'])
     skipped_indices = []
+    previous_frame_id = 0
 
     for index, row in video_df.iterrows():
         bounding_boxes = []
@@ -381,18 +382,23 @@ def play_video_with_labels(cap, video_df, classification_config, segmentation=No
             bounding_boxes.append([start_x, start_y, end_x, end_y])
             labels.append(label_names[int(class_id)])
 
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_id)
+        while previous_frame_id-1 < frame_id:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, previous_frame_id)
 
-        _, frame = cap.read()
+            _, frame = cap.read()
 
-        if segmentation is not None:
-            frame, mask, _, _ = segmentation.detect_objects_on_image(frame)
-            frame = segmentation.get_masked_image(frame, mask)
+            if segmentation is not None:
+                frame, mask, _, _ = segmentation.detect_objects_on_image(frame)
+                frame = segmentation.get_masked_image(frame, mask)
 
-        frame = draw_rectangles_and_text_on_image_from_bounding_boxes(frame, bounding_boxes, labels)
+            frame = draw_rectangles_and_text_on_image_from_bounding_boxes(frame, bounding_boxes, labels)
 
-        cv2.imshow('Video', frame)
-        cv2.waitKey(1)
+            bounding_boxes = []
+            labels = []
+            previous_frame_id += 1
+
+            cv2.imshow('Video', frame)
+            cv2.waitKey(1)
 
     cap.release()
     cv2.destroyAllWindows()
