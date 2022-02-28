@@ -20,7 +20,7 @@ detection:
   labels_path: 'labels.txt'
   train_data_annotations_path: 'data/detection/train.csv'
   validation_data_annotations_path: 'data/detection/test.csv'
-  model_path: 'data/detection/models/fasterrcnn/model15.pth'
+  model_path: null
   model_dir_path: 'data/detection/models/fasterrcnn'
   save_plot_after_x_epochs: 1
   save_model_after_x_epochs: 1

@@ -99,6 +99,7 @@ class RoadSignFasterRCNNDetection:
         self.classes = ['background'] + [str(c) for c in range(config['first_object_class_id'],
                                          len(read_file_lines(config['labels_path'])) + config['first_object_class_id'])]
         self.classes_number = len(self.classes)
+        self.model_path = config['model_path']
         self.model_dir_path = config['model_dir_path']
         self.save_plot_after_x_epochs = config['save_plot_after_x_epochs']
         self.save_model_after_x_epochs = config['save_model_after_x_epochs']
@@ -115,7 +116,7 @@ class RoadSignFasterRCNNDetection:
             self.train_model()
 
         elif mode == 'inference':
-            self.model = self.load_model(config['model_path'])
+            self.model = self.load_model(self.model_path)
 
     def get_data_loader(self, name, data_path, data_annotations_path, config, shuffle=False):
         print(f"Obtaining {name} data...")
@@ -219,7 +220,7 @@ class RoadSignFasterRCNNDetection:
         print('Plots saved\n')
 
     def train_model(self):
-        model = self.get_model()
+        model = self.load_model(self.model_path) if self.model_path is not None else self.get_model()
         params = [p for p in model.parameters() if p.requires_grad]
         optimizer = torch.optim.SGD(params, lr=0.001, momentum=0.9, weight_decay=0.0005)
 
