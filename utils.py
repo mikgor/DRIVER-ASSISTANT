@@ -62,35 +62,32 @@ def bounding_rect_to_bounding_box(bounding_rect):
     return bounding_box
 
 
-def draw_rectangle_on_image(image, bounding_rect):
+def draw_rectangle_on_image(image, bounding_rect, color=(0, 0, 255)):
     (x, y, w, h) = bounding_rect
-
-    # BGR
-    color = (0, 0, 255)
 
     thickness = 2
 
     return cv2.rectangle(image, (x, y), (x+w, y+h), color, thickness)
 
 
-def draw_rectangle_on_image_from_bounding_box(image, bounding_box):
+def draw_rectangle_on_image_from_bounding_box(image, bounding_box, color=(0, 0, 255)):
     bounding_rect = bounding_box_to_bounding_rect(bounding_box)
 
-    return draw_rectangle_on_image(image, bounding_rect)
+    return draw_rectangle_on_image(image, bounding_rect, color=color)
 
 
-def draw_rectangles_and_text_on_image_from_bounding_boxes(image, bounding_boxes, texts):
+def draw_rectangles_and_text_on_image_from_bounding_boxes(image, bounding_boxes, texts, color=(0, 0, 255)):
     img = image.copy()
     
     for (index, bounding_box) in enumerate(bounding_boxes):
         bounding_rect = bounding_box_to_bounding_rect(bounding_box)
-        img = draw_rectangle_on_image(img, bounding_rect)
-        img = draw_text_under_object_on_image(img, bounding_rect, texts[index])
+        img = draw_rectangle_on_image(img, bounding_rect, color=color)
+        img = draw_text_under_object_on_image(img, bounding_rect, texts[index], color=color)
 
     return img
 
 
-def draw_text_under_object_on_image(image, object_bounding_rect, text, margin=5):
+def draw_text_under_object_on_image(image, object_bounding_rect, text, color=(0, 0, 255), margin=5):
     (x, y, w, h) = object_bounding_rect
     text = text.capitalize()
 
@@ -116,8 +113,7 @@ def draw_text_under_object_on_image(image, object_bounding_rect, text, margin=5)
 
     org = (org_x, org_y)
 
-    # BGR
-    color = "#0000ff"
+    color = "#%02x%02x%02x" % color
     shadow_color = "#000"
 
     img_pil = Image.fromarray(image)
@@ -134,10 +130,10 @@ def draw_text_under_object_on_image(image, object_bounding_rect, text, margin=5)
     return np.array(img_pil)
 
 
-def draw_text_under_object_on_image_from_bounding_box(image, bounding_box, text, margin=5):
+def draw_text_under_object_on_image_from_bounding_box(image, bounding_box, text, margin=5, color=(0, 0, 255)):
     bounding_rect = bounding_box_to_bounding_rect(bounding_box)
 
-    return draw_text_under_object_on_image(image, bounding_rect, text, margin)
+    return draw_text_under_object_on_image(image, bounding_rect, text, margin, color)
 
 
 def get_gtsrb_df():
@@ -157,10 +153,14 @@ def read_gtsrb_csv_row(row):
     return width, height, start_x, start_y, end_x, end_y, class_id, path
 
 
-def add_timestamp_before_file_extension(file_path):
+def add_prefix_before_file_extension(file_path, prefix):
     file_path_dot_split = file_path.split('.')
 
-    return file_path_dot_split[0] + '_' + str(time.time()) + '.' + file_path_dot_split[1]
+    return file_path_dot_split[0] + '_' + str(prefix) + '.' + file_path_dot_split[1]
+
+
+def add_timestamp_before_file_extension(file_path):
+    return add_prefix_before_file_extension(file_path, time.time())
 
 
 def combine_images_horizontally(image1, image2, image2_bounding_boxes=None, margin=None):
@@ -388,8 +388,9 @@ def play_video_with_labels(cap, video_df, classification_config, segmentation=No
             _, frame = cap.read()
 
             if segmentation is not None:
-                frame, mask, _, _ = segmentation.detect_objects_on_image(frame)
-                frame = segmentation.get_masked_image(frame, mask)
+                masks = segmentation.detect_objects_on_image(frame)
+                for mask in masks:
+                    frame = mask.draw_mask_bounding_boxes(frame)
 
             frame = draw_rectangles_and_text_on_image_from_bounding_boxes(frame, bounding_boxes, labels)
 
@@ -401,4 +402,5 @@ def play_video_with_labels(cap, video_df, classification_config, segmentation=No
             cv2.waitKey(1)
 
     cap.release()
+    out.release()
     cv2.destroyAllWindows()

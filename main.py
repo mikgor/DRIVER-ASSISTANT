@@ -83,8 +83,9 @@ def display_menu(config):
                 predicted_labels = classification.model_predict_data(signs)
 
                 if optional_semantic_segmentation_selected_option == 1:
-                    image, mask, _, _ = segmentation.detect_objects_on_image(image)
-                    image = segmentation.get_masked_image(image, mask)
+                    masks = segmentation.detect_objects_on_image(image)
+                    for mask in masks:
+                        image = mask.draw_mask_bounding_boxes(image)
 
                 image = \
                     draw_rectangles_and_text_on_image_from_bounding_boxes(image, bounding_boxes, predicted_labels)
@@ -159,8 +160,10 @@ def display_menu(config):
                 image_path = '{}/{}'.format(images_folder_path, image_name)
                 image = load_and_transform_image(image_path, None)
 
-                image, mask, bounding_boxes, label_pixel_numbers_coverage = segmentation.detect_objects_on_image(image)
-                image = segmentation.get_masked_image(image, mask)
+                masks = segmentation.detect_objects_on_image(image)
+                for mask in masks:
+                    image = mask.draw_mask_bounding_boxes(image)
+
                 cv2.imshow(image_name, image)
 
         cv2.waitKey(0)

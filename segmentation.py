@@ -1,6 +1,56 @@
 from utils import *
 
 
+class SemanticSegmentationMask:
+    def __init__(self, color_mask, label_id, label_name, label_color, detection_min_object_area, masked_image_opacity):
+        self.label_id = label_id
+        self.label_name = label_name
+        self.label_color = label_color
+        self.masked_image_opacity = masked_image_opacity
+        self.mask = np.zeros(color_mask.shape, dtype="uint8")
+        self.mask[np.where((color_mask == label_color).all(axis=2))] = label_color
+
+        contours = self.get_mask_objects_contours(detection_min_object_area)
+        self.bounding_boxes = self.get_bounding_boxes_from_contours(contours)
+        self.label_pixel_coverage_percent = self.get_label_pixel_coverage_percent()
+
+    def get_mask_objects_contours(self, detection_min_object_area):
+        gray_mask_class_map = cv2.cvtColor(self.mask.astype("uint8"), cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray_mask_class_map, 0, 255, cv2.THRESH_BINARY)
+        detected_contours = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
+        contours = []
+
+        for contour in detected_contours:
+            if cv2.contourArea(contour) > detection_min_object_area:
+                contours.append(contour)
+
+        return contours
+
+    def get_bounding_boxes_from_contours(self, contours):
+        bounding_boxes = []
+
+        for contour in contours:
+            bounding_rect = cv2.boundingRect(contour)
+            bounding_boxes.append(bounding_rect_to_bounding_box(bounding_rect))
+
+        return bounding_boxes
+
+    def get_label_pixel_coverage_percent(self):
+        mask_pixels = self.mask.shape[1] * self.mask.shape[0]
+        pixel_number = np.count_nonzero(np.all(self.mask == self.label_color, axis=2))
+
+        return pixel_number/mask_pixels
+
+    def draw_mask_bounding_boxes(self, image):
+        return draw_rectangles_and_text_on_image_from_bounding_boxes(
+            image, self.bounding_boxes, [self.label_name] * len(self.bounding_boxes),
+            color=tuple((int(x) for x in self.label_color)))
+
+    def get_masked_image(self, image):
+        mask_opacity = 1 - self.masked_image_opacity
+        return ((self.masked_image_opacity * image) + (mask_opacity * self.mask)).astype("uint8")
+
+
 class SemanticSegmentation:
     def __init__(self, config):
         self.labels_to_detect = config['labels_to_detect']
@@ -41,36 +91,16 @@ class SemanticSegmentation:
 
         return blob_image
 
-    def get_bounding_boxes_from_contours(self, contours):
-        bounding_boxes = []
-
-        for contour in contours:
-            bounding_rect = cv2.boundingRect(contour)
-            bounding_boxes.append(bounding_rect_to_bounding_box(bounding_rect))
-
-        return bounding_boxes
-
-    def get_mask_objects_contours(self, mask_class_map):
-        gray_mask_class_map = cv2.cvtColor(mask_class_map.astype("uint8"), cv2.COLOR_BGR2GRAY)
-        _, thresh = cv2.threshold(gray_mask_class_map, 0, 255, cv2.THRESH_BINARY)
-        detected_contours = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
-        contours = []
-
-        for contour in detected_contours:
-            if cv2.contourArea(contour) > self.detection_min_object_area:
-                contours.append(contour)
-
-        return contours
-
-    def get_mask_label_pixel_numbers_coverage(self, mask):
-        label_pixel_numbers_coverage = []
-        mask_pixels = mask.shape[1] * mask.shape[0]
+    def split_mask_by_objects(self, color_mask):
+        masks: [SemanticSegmentationMask] = []
 
         for label in self.labels_to_detect:
-            pixel_number = np.count_nonzero(np.all(mask == self.labels_colors_dict[label], axis=2))
-            label_pixel_numbers_coverage.append((label, pixel_number, pixel_number/mask_pixels))
+            color = self.labels_colors_dict[label]
+            label_id = self.labels.index(label)
+            masks.append(SemanticSegmentationMask(
+                color_mask, label_id, label, color, self.detection_min_object_area, self.masked_image_opacity))
 
-        return label_pixel_numbers_coverage
+        return masks
 
     def detect_objects_on_image(self, image, show_legend=False):
         blob_img = self.transform_image_to_blob(image)
@@ -86,15 +116,7 @@ class SemanticSegmentation:
             self.show_legend()
             cv2.waitKey(0)
 
-        contours = self.get_mask_objects_contours(color_mask)
-        bounding_boxes = self.get_bounding_boxes_from_contours(contours)
-        label_pixel_numbers_coverage = self.get_mask_label_pixel_numbers_coverage(color_mask)
-
-        return image, color_mask, bounding_boxes, label_pixel_numbers_coverage
-
-    def get_masked_image(self, image, mask):
-        mask_opacity = 1 - self.masked_image_opacity
-        return ((self.masked_image_opacity * image) + (mask_opacity * mask)).astype("uint8")
+        return self.split_mask_by_objects(color_mask)
 
     def show_legend(self):
         label_color_width = 250
