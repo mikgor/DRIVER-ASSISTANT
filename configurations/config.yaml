@@ -42,9 +42,9 @@ segmentation:
 startup:
   seed: 1
   mode_selected_option: null
-  function_selected_option: null
-  detection_and_classification_optional_semantic_segmentation: null
-  detection_and_classification_path: 'data/test/images'
-  detection_and_classification_videos_path: 'data/test/videos'
-  classification_path: 'data/test/signs'
-  semantic_segmentation_path: 'data/test/images'
+  function_selected_options: null
+
+inference:
+  images_path: 'data/test/images'
+  videos_path: 'data/test/videos'
+  videos_output_path: 'data/test/videos_output'

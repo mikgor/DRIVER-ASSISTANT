@@ -330,8 +330,8 @@ def get_video_detections_df():
     return pd.DataFrame(columns=['FrameId', 'Roi.X1', 'Roi.Y1', 'Roi.X2', 'Roi.Y2', 'ClassId', 'Score'])
 
 
-def get_video_detections(video_path):
-    video_detections_csv = video_path + '.csv'
+def get_video_detections(video_output_path):
+    video_detections_csv = video_output_path + '.csv'
 
     if os.path.exists(video_detections_csv):
         return pd.read_csv(video_detections_csv)
@@ -339,8 +339,8 @@ def get_video_detections(video_path):
     return get_video_detections_df()
 
 
-def save_video_frame_detections(frame_id, bounding_boxes, label_ids, scores, df, video_path):
-    video_detections_csv = video_path + '.csv'
+def save_video_frame_detections(frame_id, bounding_boxes, label_ids, scores, df, video_output_path):
+    video_detections_csv = video_output_path + '.csv'
 
     for (index, box) in enumerate(bounding_boxes):
         start_x, start_y, end_x, end_y = box
@@ -364,7 +364,7 @@ def read_video_csv_row(row):
     return frame_id, start_x, start_y, end_x, end_y, class_id, score
 
 
-def play_video_with_labels(cap, video_df, classification_config, segmentation=None):
+def play_video_with_labels(cap, video_df, classification_config):
     label_names = read_file_lines(classification_config['label_names_path'])
     skipped_indices = []
     previous_frame_id = 0
@@ -386,11 +386,6 @@ def play_video_with_labels(cap, video_df, classification_config, segmentation=No
             cap.set(cv2.CAP_PROP_POS_FRAMES, previous_frame_id)
 
             _, frame = cap.read()
-
-            if segmentation is not None:
-                masks = segmentation.detect_objects_on_image(frame)
-                for mask in masks:
-                    frame = mask.draw_mask_bounding_boxes(frame)
 
             frame = draw_rectangles_and_text_on_image_from_bounding_boxes(frame, bounding_boxes, labels)
 
