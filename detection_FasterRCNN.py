@@ -11,9 +11,9 @@ import torch
 import matplotlib.pyplot as plt
 import time
 
+from bounding_box import BoundingBox
 from utils import collate_fn, transform_to_tensor_v2, read_file_lines
-from utils import read_gtsrb_csv_row, generate_augmented_images_and_bounding_boxes_dataset, \
-    draw_rectangle_on_image_from_bounding_box
+from utils import read_gtsrb_csv_row, generate_augmented_images_and_bounding_boxes_dataset
 
 
 class RoadSignDataset(Dataset):
@@ -33,25 +33,24 @@ class RoadSignDataset(Dataset):
                 skipped_indices.remove(index)
             else:
                 bounding_boxes = []
-                labels = []
                 path = row['Path']
 
                 path_all_bounding_boxes_rows = annotations.loc[annotations['Path'] == path]
                 skipped_indices = skipped_indices + list(path_all_bounding_boxes_rows.index.values)[1:]
 
                 for _, bounding_box_row in path_all_bounding_boxes_rows.iterrows():
-                    _, _, start_x, start_y, end_x, end_y, class_id, _ = read_gtsrb_csv_row(bounding_box_row)
-                    bounding_boxes.append([start_x, start_y, end_x, end_y])
-                    labels.append(int(class_id) if self.multi_labels else 1)
+                    _, _, _, bounding_box = read_gtsrb_csv_row(bounding_box_row)
+                    if not self.multi_labels:
+                        bounding_box.label_id = 1
+                    bounding_boxes.append(bounding_box)
 
                 img_path = data_path + path
 
-                self.all_images.append((img_path, bounding_boxes, labels))
+                self.all_images.append((img_path, bounding_boxes))
 
     def __getitem__(self, idx):
-        img_path, bounding_boxes, labels = self.all_images[idx]
+        img_path, bounding_boxes = self.all_images[idx]
         image = cv2.imread(img_path)
-
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
         image_resized = cv2.resize(image, (self.width, self.height))
         image_resized /= 255.0
@@ -60,15 +59,15 @@ class RoadSignDataset(Dataset):
         image_width = image.shape[1]
 
         boxes = []
+        labels = []
 
         for box in bounding_boxes:
-            (start_x, start_y, end_x, end_y) = box
-            start_x = (start_x / image_width) * self.width
-            end_x = (end_x / image_width) * self.width
-            start_y = (start_y / image_height) * self.height
-            end_y = (end_y / image_height) * self.height
-
+            start_x = (box.start_x / image_width) * self.width
+            end_x = (box.end_x / image_width) * self.width
+            start_y = (box.start_y / image_height) * self.height
+            end_y = (box.end_y / image_height) * self.height
             boxes.append([start_x, start_y, end_x, end_y])
+            labels.append(box.label_id)
 
         # Boxes and labels to tensors
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
@@ -264,7 +263,7 @@ class RoadSignFasterRCNNDetection:
             if current_epoch == self.epochs or current_epoch % self.save_plot_after_x_epochs == 0:
                 self.generate_and_save_loss_plots(train_loss_list, val_loss_list, current_epoch)
 
-    def predict_boxes_and_images(self, image_path, detection_threshold=0.77):
+    def predict_bounding_boxes(self, image_path, detection_threshold=0.77):
         image = image_path
 
         if type(image_path) == str:
@@ -282,27 +281,21 @@ class RoadSignFasterRCNNDetection:
         # Add batch dimension
         image = torch.unsqueeze(image, 0)
 
+        bounding_boxes: [BoundingBox] = []
+
         with torch.no_grad():
             outputs = self.model(image)
         outputs = [{k: v.to('cpu') for k, v in t.items()} for t in outputs]
 
-        boxes = outputs[0]['boxes'].data.numpy()
-        label_ids = outputs[0]['labels'].data.numpy()
-        scores = outputs[0]['scores'].data.numpy()
+        for index in range(len(outputs)):
+            for idx, score in enumerate(outputs[index]['scores']):
+                if score > detection_threshold:
+                    (start_x, start_y, end_x, end_y) = outputs[index]['boxes'][idx].data.numpy().astype(np.int32)
+                    bounding_boxes.append(
+                        BoundingBox(start_x, start_y, end_x, end_y,
+                                    outputs[index]['labels'][idx].data.numpy(),
+                                    score=outputs[index]['scores'][idx].data.numpy(),
+                                    image=original_image.astype("uint8")[start_y:end_y, start_x:end_x])
+                    )
 
-        bounding_boxes = boxes[scores >= detection_threshold].astype(np.int32)
-
-        images = []
-        for (start_x, start_y, end_x, end_y) in bounding_boxes:
-            images.append(original_image.astype("uint8")[start_y:end_y, start_x:end_x])
-
-        return bounding_boxes, images, label_ids, scores
-
-    def predict_and_draw_boxes(self, image_path):
-        image = cv2.imread(image_path)
-        boxes, _ = self.predict_boxes_and_images(image_path)
-
-        for box in boxes:
-            image = draw_rectangle_on_image_from_bounding_box(image, (int(box[0]), int(box[1]), int(box[2]), int(box[3])))
-
-        return image
+        return bounding_boxes

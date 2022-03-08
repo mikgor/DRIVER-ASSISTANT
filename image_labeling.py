@@ -3,7 +3,8 @@ import cv2
 import pandas as pd
 import mouse
 
-from utils import get_gtsrb_df, load_and_transform_image, draw_rectangles_and_text_on_image_from_bounding_boxes
+from bounding_box import BoundingBox
+from utils import get_gtsrb_df, load_and_transform_image, draw_bounding_boxes_on_image
 
 images_folder_path = 'data/detection/Train_frames'
 image_prefix_path = 'Train_frames'
@@ -16,7 +17,7 @@ offset_y = 31
 default_class_id = 1
 
 
-def mouse_on_click(mouse_click_positions, image_shape, bounding_boxes, class_ids):
+def mouse_on_click(mouse_click_positions, image_shape, bounding_boxes):
     h, w, _ = image_shape
     x, y = mouse.get_position()
     x -= offset_x
@@ -29,18 +30,18 @@ def mouse_on_click(mouse_click_positions, image_shape, bounding_boxes, class_ids
         print(x, y)
 
         if len(mouse_click_positions) % 2 == 0:
-            bounding_boxes.append((*mouse_click_positions[-2], *mouse_click_positions[-1]))
+            bounding_boxes.append(
+                BoundingBox(*mouse_click_positions[-2], *mouse_click_positions[-1], label_id=default_class_id))
 
-            class_ids.append(str(default_class_id))
             provided_id = input(f"Class ID for {mouse_click_positions[-2]}, ({x}, {y}): ")
             if provided_id != '':
-                class_ids[-1] = provided_id
+                bounding_boxes[-1].label_id = provided_id
 
-            print(f"{mouse_click_positions[-2]}, ({x}, {y}) - {class_ids[-1]}")
+            print(f"{mouse_click_positions[-2]}, ({x}, {y}) - {bounding_boxes[-1].label_id}")
 
 
-def update_and_show_image(image, image_path, bounding_boxes, class_ids):
-    image = draw_rectangles_and_text_on_image_from_bounding_boxes(image, bounding_boxes, class_ids)
+def update_and_show_image(image, image_path, bounding_boxes):
+    image = draw_bounding_boxes_on_image(image, bounding_boxes, True)
     cv2.namedWindow(image_path)
     cv2.moveWindow(image_path, window_x, window_y)
     cv2.imshow(image_path, image)
@@ -57,29 +58,26 @@ for image_name in os.listdir(images_folder_path):
     image = load_and_transform_image(image_path, None)
     shape = image.shape
     bounding_boxes = []
-    class_ids = []
     mouse_click_positions = []
-    mouse.on_click(mouse_on_click, args=(mouse_click_positions, shape, bounding_boxes, class_ids))
+    mouse.on_click(mouse_on_click, args=(mouse_click_positions, shape, bounding_boxes))
 
-    update_and_show_image(image, image_path, [], [])
+    update_and_show_image(image, image_path, [])
 
     while True:
         key = cv2.waitKey(0)
         cv2.destroyAllWindows()
 
         if key == 122: # z
-            if len(bounding_boxes) > 0 and len(class_ids) > 0:
+            if len(bounding_boxes) > 0:
                 bounding_boxes.pop()
-                class_ids.pop()
-                update_and_show_image(image, image_path, bounding_boxes, class_ids)
+                update_and_show_image(image, image_path, bounding_boxes)
         elif key == 32: # space
-            for (index, box) in enumerate(bounding_boxes):
-                start_x, start_y, end_x, end_y = box
-                df.loc[len(df)] = [shape[1], shape[0], start_x, start_y, end_x, end_y, class_ids[index],
+            for bounding_box in bounding_boxes:
+                df.loc[len(df)] = [shape[1], shape[0], *bounding_box.get_coords(), bounding_box.label_id,
                                    '{}/{}'.format(image_prefix_path, image_name)]
             df.to_csv(save_path, index=False)
             break
         else:
-            update_and_show_image(image, image_path, bounding_boxes, class_ids)
+            update_and_show_image(image, image_path, bounding_boxes)
 
     mouse.unhook_all()

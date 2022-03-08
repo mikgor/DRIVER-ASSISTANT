@@ -6,13 +6,14 @@ import cv2
 import matplotlib.pyplot as plt
 import tensorflow
 import numpy as np
-from PIL import ImageFont, ImageDraw, Image
 
 import imgaug as ia
 import imgaug.augmenters as iaa
 import pandas as pd
 import albumentations
 from albumentations.pytorch import ToTensorV2
+
+from bounding_box import BoundingBox
 
 
 def read_file_lines(path):
@@ -48,92 +49,52 @@ def create_directories_for_labels(path, labels):
         os.mkdir('{}/{}'.format(path, label))
 
 
-def bounding_box_to_bounding_rect(bounding_box):
-    (start_x, start_y, end_x, end_y) = bounding_box
-    bounding_rect = (int(start_x), int(start_y), int(end_x - start_x), int(end_y - start_y))
+def create_bounding_boxes(coordinates, label_ids=None, label_names=None, label_colors=None, scores=None, images=None):
+    if label_ids is None:
+        label_ids = []
+    if label_names is None:
+        label_names = []
+    if label_colors is None:
+        label_colors = []
+    if scores is None:
+        scores = []
+    if images is None:
+        images = []
 
-    return bounding_rect
+    coordinates_len = len(coordinates)
+    label_ids_len = len(label_ids)
+    label_names_len = len(label_names)
+    label_colors_len = len(label_colors)
+    scores_len = len(scores)
+    images_len = len(images)
+
+    bounding_boxes = []
+    for (index, (start_x, start_y, end_x, end_y)) in enumerate(coordinates):
+        bounding_box = BoundingBox(start_x, start_y, end_x, end_y,
+                                   label_ids[index] if label_ids_len == coordinates_len else None,
+                                   label_names[index] if label_names_len == coordinates_len else None,
+                                   label_colors[index] if label_colors_len == coordinates_len else None,
+                                   scores[index] if scores_len == coordinates_len else None,
+                                   images[index] if images_len == coordinates_len else None)
+        bounding_boxes.append(bounding_box)
+
+    return bounding_boxes
 
 
-def bounding_rect_to_bounding_box(bounding_rect):
-    (x, y, w, h) = bounding_rect
-    bounding_box = (int(x), int(y), int(x + w), int(y + h))
-
-    return bounding_box
-
-
-def draw_rectangle_on_image(image, bounding_rect, color=(0, 0, 255)):
-    (x, y, w, h) = bounding_rect
-
-    thickness = 2
-
-    return cv2.rectangle(image, (x, y), (x+w, y+h), color, thickness)
-
-
-def draw_rectangle_on_image_from_bounding_box(image, bounding_box, color=(0, 0, 255)):
-    bounding_rect = bounding_box_to_bounding_rect(bounding_box)
-
-    return draw_rectangle_on_image(image, bounding_rect, color=color)
-
-
-def draw_rectangles_and_text_on_image_from_bounding_boxes(image, bounding_boxes, texts, color=(0, 0, 255)):
+def draw_bounding_boxes_on_image(image, bounding_boxes, with_label_id=False, thickness=2, margin=5):
     img = image.copy()
-    
-    for (index, bounding_box) in enumerate(bounding_boxes):
-        bounding_rect = bounding_box_to_bounding_rect(bounding_box)
-        img = draw_rectangle_on_image(img, bounding_rect, color=color)
-        img = draw_text_under_object_on_image(img, bounding_rect, texts[index], color=color)
+    for bounding_box in bounding_boxes:
+        img = bounding_box.draw_on_image(img, with_label_id, thickness, margin)
 
     return img
 
 
-def draw_text_under_object_on_image(image, object_bounding_rect, text, color=(0, 0, 255), margin=5):
-    (x, y, w, h) = object_bounding_rect
-    text = text.capitalize()
+def draw_masks_on_image(image, masks):
+    img = image.copy()
+    for mask in masks:
+        img = mask.draw_mask_on_image(img)
 
-    font_path = "arial.ttf"
-    font = ImageFont.truetype(font_path, 16)
-    text_width, text_height = font.getsize(text)
-
-    org_x = x - text_width/2 + w/2
-    org_y = y + h + margin
-
-    if org_x < 0:
-        org_x = x
-
-    if org_y < 0:
-        org_y = y - margin
-
-    image_height, image_width, _ = image.shape
-    if org_x + text_width > image_width:
-        org_x = image_width - text_width
-
-    if org_y + text_height > image_height:
-        org_y = y + margin
-
-    org = (org_x, org_y)
-
-    color = "#%02x%02x%02x" % color
-    shadow_color = "#000"
-
-    img_pil = Image.fromarray(image)
-    draw = ImageDraw.Draw(img_pil)
-
-    # Shadow
-    draw.text((org[0]+1, org[1]+1), text, font=font, fill=shadow_color)
-    draw.text((org[0]-1, org[1]-1), text, font=font, fill=shadow_color)
-    draw.text((org[0]-1, org[1]+1), text, font=font, fill=shadow_color)
-    draw.text((org[0]+1, org[1]-1), text, font=font, fill=shadow_color)
-
-    draw.text(org, text, font=font, fill=color)
-
-    return np.array(img_pil)
-
-
-def draw_text_under_object_on_image_from_bounding_box(image, bounding_box, text, margin=5, color=(0, 0, 255)):
-    bounding_rect = bounding_box_to_bounding_rect(bounding_box)
-
-    return draw_text_under_object_on_image(image, bounding_rect, text, margin, color)
+    return img
 
 
 def get_gtsrb_df():
@@ -150,13 +111,14 @@ def read_gtsrb_csv_row(row):
     class_id = row['ClassId']
     path = row['Path']
 
-    return width, height, start_x, start_y, end_x, end_y, class_id, path
+    return width, height, path, BoundingBox(start_x, start_y, end_x, end_y, label_id=class_id)
 
 
 def add_prefix_before_file_extension(file_path, prefix):
     file_path_dot_split = file_path.split('.')
+    file_path_dot_split.insert(-1, str(prefix))
 
-    return file_path_dot_split[0] + '_' + str(prefix) + '.' + file_path_dot_split[1]
+    return '.'.join(file_path_dot_split)
 
 
 def add_timestamp_before_file_extension(file_path):
@@ -241,9 +203,9 @@ def generate_augmented_images_and_bounding_boxes_dataset(data_annotations_path, 
     bounding_boxes = []
 
     for index, row in data.iterrows():
-        _, _, start_x, start_y, end_x, end_y, class_id, path = read_gtsrb_csv_row(row)
-        c_ids = [class_id]
-        boxes = [ia.BoundingBox(x1=start_x, y1=start_y, x2=end_x, y2=end_y)]
+        _, _, path, bounding_box = read_gtsrb_csv_row(row)
+        c_ids = [bounding_box.label_id]
+        boxes = [ia.BoundingBox(*bounding_box.get_coords())]
 
         image = cv2.imread(data_path + path)
 
@@ -260,20 +222,19 @@ def generate_augmented_images_and_bounding_boxes_dataset(data_annotations_path, 
                 for n in range(number_of_combined_images-1):
                     random_image_index = random.randint(0, len(data)-1)
                     random_row = data.loc[random_image_index]
-                    _, _, random_start_x, random_start_y, random_end_x, random_end_y, random_class_id, random_path = \
-                        read_gtsrb_csv_row(random_row)
+                    _, _, random_path, random_bounding_box = read_gtsrb_csv_row(random_row)
 
-                    c_ids.append(random_class_id)
+                    c_ids.append(random_bounding_box.label_id)
                     random_img_path = data_path + random_path
                     random_image = cv2.imread(random_img_path)
                     path = path + random_img_path.split('/')[-1]
 
-                    random_image_bounding_boxes = (random_start_x, random_start_y, random_end_x, random_end_y)
-                    image, random_image_bounding_boxes =\
-                        combine_images_horizontally(image, random_image, [random_image_bounding_boxes])
+                    random_image_coords = (random_bounding_box.get_coords())
+                    image, random_image_coords =\
+                        combine_images_horizontally(image, random_image, [random_image_coords])
 
-                    for bounding_box in random_image_bounding_boxes:
-                        (start_x, start_y, end_x, end_y) = bounding_box
+                    for coords in random_image_coords:
+                        (start_x, start_y, end_x, end_y) = coords
                         boxes.append(ia.BoundingBox(x1=start_x, y1=start_y, x2=end_x, y2=end_y))
 
         images.append(image)
@@ -327,7 +288,7 @@ def transform_to_tensor_v2():
 
 
 def get_video_detections_df():
-    return pd.DataFrame(columns=['FrameId', 'Roi.X1', 'Roi.Y1', 'Roi.X2', 'Roi.Y2', 'ClassId', 'Score'])
+    return pd.DataFrame(columns=['FrameId', 'X1', 'Y1', 'X2', 'Y2', 'ClassifiedId', 'Score'])
 
 
 def get_video_detections(video_output_path):
@@ -339,29 +300,28 @@ def get_video_detections(video_output_path):
     return get_video_detections_df()
 
 
-def save_video_frame_detections(frame_id, bounding_boxes, label_ids, scores, df, video_output_path):
+def save_video_frame_detections(frame_id, bounding_boxes, df, video_output_path):
     video_detections_csv = video_output_path + '.csv'
 
-    for (index, box) in enumerate(bounding_boxes):
-        start_x, start_y, end_x, end_y = box
-        df.loc[len(df)] = [frame_id, start_x, start_y, end_x, end_y, label_ids[index], scores[index]]
+    for bounding_box in bounding_boxes:
+        df.loc[len(df)] = [frame_id, *bounding_box.get_coords(), bounding_box.label_id, bounding_box.score]
 
-    df = df.astype(
-        {'FrameId': 'int', 'Roi.X1': 'int', 'Roi.Y1': 'int', 'Roi.X2': 'int', 'Roi.Y2': 'int', 'ClassId': 'int'})
+    df = df.astype({'FrameId': 'int', 'X1': 'int', 'Y1': 'int', 'X2': 'int', 'Y2': 'int',
+                    'ClassifiedId': 'int', 'Score': 'float'})
 
     df.to_csv(video_detections_csv, index=False)
 
 
 def read_video_csv_row(row):
     frame_id = row['FrameId']
-    start_x = row['Roi.X1']
-    start_y = row['Roi.Y1']
-    end_x = row['Roi.X2']
-    end_y = row['Roi.Y2']
-    class_id = row['ClassId']
+    start_x = row['X1']
+    start_y = row['Y1']
+    end_x = row['X2']
+    end_y = row['Y2']
+    label_id = row['ClassifiedId']
     score = row['Score']
 
-    return frame_id, start_x, start_y, end_x, end_y, class_id, score
+    return frame_id, BoundingBox(start_x, start_y, end_x, end_y, label_id=label_id, score=score)
 
 
 def play_video_with_labels(cap, video_df, classification_config):
@@ -371,26 +331,24 @@ def play_video_with_labels(cap, video_df, classification_config):
 
     for index, row in video_df.iterrows():
         bounding_boxes = []
-        labels = []
         frame_id = row['FrameId']
 
         frame_all_bounding_boxes_rows = video_df.loc[video_df['FrameId'] == frame_id]
         skipped_indices = skipped_indices + list(frame_all_bounding_boxes_rows.index.values)[1:]
 
         for _, bounding_box_row in frame_all_bounding_boxes_rows.iterrows():
-            _, start_x, start_y, end_x, end_y, class_id, score = read_video_csv_row(bounding_box_row)
-            bounding_boxes.append([start_x, start_y, end_x, end_y])
-            labels.append(label_names[int(class_id)])
+            _, bounding_box = read_video_csv_row(bounding_box_row)
+            bounding_box.label_name = label_names[int(bounding_box.label_id)]
+            bounding_boxes.append(bounding_box)
 
         while previous_frame_id-1 < frame_id:
             cap.set(cv2.CAP_PROP_POS_FRAMES, previous_frame_id)
 
             _, frame = cap.read()
 
-            frame = draw_rectangles_and_text_on_image_from_bounding_boxes(frame, bounding_boxes, labels)
+            frame = draw_bounding_boxes_on_image(frame, bounding_boxes)
 
             bounding_boxes = []
-            labels = []
             previous_frame_id += 1
 
             cv2.imshow('Video', frame)

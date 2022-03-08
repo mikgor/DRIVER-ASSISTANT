@@ -9,8 +9,8 @@ import imgaug as ia
 from classification import RoadSignClassification
 from detection_FasterRCNN import RoadSignFasterRCNNDetection
 from inference_dispatcher import InferenceDispatcher
-from utils import load_and_transform_image, draw_rectangles_and_text_on_image_from_bounding_boxes, get_video_detections, \
-    save_video_frame_detections, play_video_with_labels
+from utils import load_and_transform_image, get_video_detections, save_video_frame_detections, \
+    play_video_with_labels, draw_bounding_boxes_on_image
 
 
 def load_configuration():
@@ -102,20 +102,24 @@ def display_menu(config):
                 image_path = '{}/{}'.format(images_path, image_name)
                 image = load_and_transform_image(image_path, None)
 
-                image, detected_bounding_boxes, detected_images, detected_label_ids, detected_scores, \
-                    classified_labels, elapsed = inference_dispatcher.dispatch(image)
+                bounding_boxes, segmentation_bounding_boxes, masks, _ = inference_dispatcher.dispatch(image)
 
-                image = draw_rectangles_and_text_on_image_from_bounding_boxes(
-                    image, detected_bounding_boxes, classified_labels)
+                image = draw_bounding_boxes_on_image(image, bounding_boxes + segmentation_bounding_boxes)
 
                 cv2.imshow(image_name, image)
 
         elif mode_selected_option == MODE_INFERENCE_VIDEOS:
+            assert INFERENCE_DETECTION in inference_selected_options \
+                   and INFERENCE_CLASSIFICATION in inference_selected_options, \
+                   'Detection and Classification have to be included as inference option in config ' \
+                   'in order to save video frames'
+
+            assert INFERENCE_SEMANTIC_SEGMENTATION not in inference_selected_options, \
+                   'Semantic segmentation is currently not supported'
+
             videos_path = inference_config['videos_path']
             videos_output_path = inference_config['videos_output_path']
             for video_name in os.listdir(videos_path):
-                if '.csv' in video_name:
-                    continue
 
                 video_path = '{}/{}'.format(videos_path, video_name)
                 video_output_path = '{}/{}'.format(videos_output_path, video_name)
@@ -132,8 +136,8 @@ def display_menu(config):
                     cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame_id+frame_id)
                     success, frame = cap.read()
 
-                    frame, detected_bounding_boxes, detected_images, detected_label_ids, detected_scores, \
-                        classified_labels, elapsed = inference_dispatcher.dispatch(frame)
+                    detected_bounding_boxes, segmentation_bounding_boxes, masks, elapsed = \
+                        inference_dispatcher.dispatch(frame)
 
                     time_elapsed += elapsed
                     avg_sec_per_frame = time_elapsed / (frame_id+1 - start_frame_id)
@@ -141,8 +145,7 @@ def display_menu(config):
                     print(f"Processed {(frame_id/frames):.3f}% ({frame_id} / {frames}). Time left: "
                           f"{((avg_sec_per_frame*(frames-frame_id))/60):.3f} minutes.")
 
-                    save_video_frame_detections(
-                        frame_id, detected_bounding_boxes, detected_label_ids, detected_scores, df, video_output_path)
+                    save_video_frame_detections(frame_id, detected_bounding_boxes, df, video_output_path)
 
                     frame_id += 1
                     cap.set(cv2.CAP_PROP_POS_FRAMES, frame_id)

@@ -41,8 +41,11 @@ segmentation:
 
 startup:
   seed: 1
-  mode_selected_option: null
-  function_selected_options: null
+  mode_selected_option: 1
+  function_selected_options:
+    - 1
+    - 2
+    - 3
 
 inference:
   images_path: 'data/test/images'
