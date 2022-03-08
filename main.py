@@ -7,7 +7,7 @@ import numpy as np
 import imgaug as ia
 
 from classification import RoadSignClassification
-from detection_FasterRCNN import RoadSignFasterRCNNDetection
+from detection import RoadSignDetection
 from inference_dispatcher import InferenceDispatcher
 from utils import load_and_transform_image, get_video_detections, save_video_frame_detections, \
     play_video_with_labels, draw_bounding_boxes_on_image
@@ -161,7 +161,7 @@ def display_menu(config):
                                                    startup_config['function_selected_options'])
 
         if train_selected_option == TRAIN_DETECTION:
-            _ = RoadSignFasterRCNNDetection(config['detection'], mode='train')
+            _ = RoadSignDetection(config['detection'], mode='train')
 
         elif train_selected_option == TRAIN_CLASSIFICATION:
             _ = RoadSignClassification(config['classification'], mode='train')

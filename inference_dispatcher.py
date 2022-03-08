@@ -2,14 +2,13 @@ import time
 
 from bounding_box import BoundingBox
 from classification import RoadSignClassification
-from detection_FasterRCNN import RoadSignFasterRCNNDetection
+from detection import RoadSignDetection
 from segmentation import SemanticSegmentation, SemanticSegmentationMask
 
 
 class InferenceDispatcher:
     def __init__(self, detection_config, classification_config, segmentation_config):
-        self.detection = RoadSignFasterRCNNDetection(detection_config, mode='inference') \
-            if detection_config else None
+        self.detection = RoadSignDetection(detection_config, mode='inference') if detection_config else None
 
         self.detection_threshold = detection_config['detection_threshold'] if detection_config else None
 

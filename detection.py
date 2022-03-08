@@ -88,7 +88,7 @@ class RoadSignDataset(Dataset):
         return len(self.all_images)
 
 
-class RoadSignFasterRCNNDetection:
+class RoadSignDetection:
     def __init__(self, config, mode='train'):
 
         self.batch_size = config['batch_size']
@@ -219,7 +219,7 @@ class RoadSignFasterRCNNDetection:
         print('Plots saved\n')
 
     def train_model(self):
-        model = self.load_model(self.model_path) if self.model_path is not None else self.get_model()
+        model = self.get_model()
         params = [p for p in model.parameters() if p.requires_grad]
         optimizer = torch.optim.SGD(params, lr=0.001, momentum=0.9, weight_decay=0.0005)
 
