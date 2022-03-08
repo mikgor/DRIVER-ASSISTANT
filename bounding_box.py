@@ -12,12 +12,15 @@ class BoundingBox:
         self.end_y = int(end_y)
         self.label_id = label_id
         self.label_name = label_name
-        self.label_color = label_color
+        self.label_color = tuple((int(x) for x in label_color.split(','))) if type(label_color) is str else label_color
         self.score = score
         self.image = image
 
     def get_coords(self):
         return self.start_x, self.start_y, self.end_x, self.end_y
+
+    def get_as_df_row(self):
+        return [*self.get_coords(), self.label_id, self.score]
 
     def draw_on_image(self, image, with_label_id=False, thickness=2, margin=5):
         (x, y, w, h) = (self.start_x, self.start_y, self.end_x - self.start_x, self.end_y - self.start_y)

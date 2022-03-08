@@ -288,72 +288,47 @@ def transform_to_tensor_v2():
 
 
 def get_video_detections_df():
-    return pd.DataFrame(columns=['FrameId', 'X1', 'Y1', 'X2', 'Y2', 'ClassifiedId', 'Score'])
+    return pd.DataFrame(columns=['FrameId', 'X1', 'Y1', 'X2', 'Y2', 'LabelId', 'Score'])
 
 
-def get_video_detections(video_output_path):
-    video_detections_csv = video_output_path + '.csv'
-
-    if os.path.exists(video_detections_csv):
-        return pd.read_csv(video_detections_csv)
-
-    return get_video_detections_df()
+def get_video_segmentations_df():
+    return pd.DataFrame(columns=['FrameId', 'X1', 'Y1', 'X2', 'Y2', 'LabelId'])
 
 
-def save_video_frame_detections(frame_id, bounding_boxes, df, video_output_path):
-    video_detections_csv = video_output_path + '.csv'
+def get_video_dfs(video_output_path):
+    detections_df_path = video_output_path + '_detections.csv'
+    segmentations_df_path = video_output_path + '_segmentations.csv'
 
-    for bounding_box in bounding_boxes:
-        df.loc[len(df)] = [frame_id, *bounding_box.get_coords(), bounding_box.label_id, bounding_box.score]
+    detections_df = \
+        pd.read_csv(detections_df_path) if os.path.exists(detections_df_path) else get_video_detections_df()
+    segmentations_df = \
+        pd.read_csv(segmentations_df_path) if os.path.exists(segmentations_df_path) else get_video_segmentations_df()
 
-    df = df.astype({'FrameId': 'int', 'X1': 'int', 'Y1': 'int', 'X2': 'int', 'Y2': 'int',
-                    'ClassifiedId': 'int', 'Score': 'float'})
-
-    df.to_csv(video_detections_csv, index=False)
-
-
-def read_video_csv_row(row):
-    frame_id = row['FrameId']
-    start_x = row['X1']
-    start_y = row['Y1']
-    end_x = row['X2']
-    end_y = row['Y2']
-    label_id = row['ClassifiedId']
-    score = row['Score']
-
-    return frame_id, BoundingBox(start_x, start_y, end_x, end_y, label_id=label_id, score=score)
+    return detections_df, segmentations_df
 
 
-def play_video_with_labels(cap, video_df, classification_config):
-    label_names = read_file_lines(classification_config['label_names_path'])
-    skipped_indices = []
-    previous_frame_id = 0
+def save_video_frame_dfs(frame_id, detection_bounding_boxes, detections_df,
+                         segmentation_bounding_boxes, segmentations_df, video_output_path):
+    for bounding_box in detection_bounding_boxes:
+        detections_df.loc[len(detections_df)] = [frame_id] + bounding_box.get_as_df_row()
 
-    for index, row in video_df.iterrows():
-        bounding_boxes = []
-        frame_id = row['FrameId']
+    for bounding_box in segmentation_bounding_boxes:
+        segmentations_df.loc[len(segmentations_df)] = [frame_id] + bounding_box.get_as_df_row()[:5]
 
-        frame_all_bounding_boxes_rows = video_df.loc[video_df['FrameId'] == frame_id]
-        skipped_indices = skipped_indices + list(frame_all_bounding_boxes_rows.index.values)[1:]
+    detections_df.to_csv(video_output_path + '_detections.csv', index=False)
+    segmentations_df.to_csv(video_output_path + '_segmentations.csv', index=False)
 
-        for _, bounding_box_row in frame_all_bounding_boxes_rows.iterrows():
-            _, bounding_box = read_video_csv_row(bounding_box_row)
-            bounding_box.label_name = label_names[int(bounding_box.label_id)]
-            bounding_boxes.append(bounding_box)
 
-        while previous_frame_id-1 < frame_id:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, previous_frame_id)
+def get_video_df_frame_bounding_boxes(video_df, frame_id, label_names, label_colors=None):
+    bounding_boxes = []
+    frame_rows = video_df.loc[video_df['FrameId'] == frame_id]
 
-            _, frame = cap.read()
+    for _, row in frame_rows.iterrows():
+        label_id = int(row['LabelId'])
+        bounding_box = BoundingBox(row['X1'], row['Y1'], row['X2'], row['Y2'], row['LabelId'],
+                                   label_names[label_id] if label_names else None,
+                                   label_colors[label_id] if label_colors else None,
+                                   row['Score'] if 'Score' in video_df.columns else None)
+        bounding_boxes.append(bounding_box)
 
-            frame = draw_bounding_boxes_on_image(frame, bounding_boxes)
-
-            bounding_boxes = []
-            previous_frame_id += 1
-
-            cv2.imshow('Video', frame)
-            cv2.waitKey(1)
-
-    cap.release()
-    out.release()
-    cv2.destroyAllWindows()
+    return bounding_boxes

@@ -51,3 +51,5 @@ inference:
   images_path: 'data/test/images'
   videos_path: 'data/test/videos'
   videos_output_path: 'data/test/videos_output'
+  videos_save_labeled: true
+  videos_show_labeled_frame: true
