@@ -49,10 +49,11 @@ startup:
 
 inference:
   images_path: 'data/test/images'
-  videos_path: 'data/test/videos'
-  videos_output_path: 'data/test/videos_output'
-  videos_save_labeled: true
-  videos_show_labeled_frame: true
+  videos:
+    path: 'data/test/videos'
+    output_path: 'data/test/videos_output'
+    save_labeled: true
+    show_labeled_frame: true
 
 image_labeling:
   images_folder_path: 'data/detection/Train_frames'

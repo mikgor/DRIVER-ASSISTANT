@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 import cv2
 import yaml
@@ -68,9 +69,10 @@ def input_from_options(title, options, selected_options, allow_multiple=False):
 def display_menu(config):
     MODE_INFERENCE_IMAGES = 1
     MODE_INFERENCE_VIDEOS = 2
-    MODE_TRAIN = 3
-    MODE_PLAY_LABELED_VIDEOS = 4
-    MODE_LABEL_IMAGES = 5
+    MODE_INFERENCE_LIVE = 3
+    MODE_TRAIN = 4
+    MODE_PLAY_LABELED_VIDEOS = 5
+    MODE_LABEL_IMAGES = 6
 
     INFERENCE_DETECTION = 1
     INFERENCE_CLASSIFICATION = 2
@@ -81,17 +83,18 @@ def display_menu(config):
 
     startup_config = config['startup']
     inference_config = config['inference']
+    inference_videos_config = inference_config['videos']
     image_labeling_config = config['image_labeling']
 
     mode_options = [(MODE_INFERENCE_IMAGES, 'Inference (images)'),
                     (MODE_INFERENCE_VIDEOS, 'Inference (videos)'),
+                    (MODE_INFERENCE_LIVE, 'Inference (live)'),
                     (MODE_TRAIN, 'Train'),
                     (MODE_PLAY_LABELED_VIDEOS, 'Apply labels to videos and play'),
                     (MODE_LABEL_IMAGES, 'Label images')]
     mode_selected_option = input_from_options('Model mode', mode_options, startup_config['mode_selected_option'])
 
-    if mode_selected_option == MODE_INFERENCE_IMAGES or mode_selected_option == MODE_INFERENCE_VIDEOS \
-            or mode_selected_option == MODE_LABEL_IMAGES:
+    if mode_selected_option != MODE_TRAIN and mode_selected_option != MODE_PLAY_LABELED_VIDEOS:
         inference_options = [(INFERENCE_DETECTION, 'Detection'),
                              (INFERENCE_CLASSIFICATION, 'Classification'),
                              (INFERENCE_SEMANTIC_SEGMENTATION, 'Semantic segmentation')]
@@ -117,13 +120,8 @@ def display_menu(config):
                 cv2.imshow(image_name, image)
 
         elif mode_selected_option == MODE_INFERENCE_VIDEOS:
-            assert INFERENCE_DETECTION in inference_selected_options \
-                   and INFERENCE_CLASSIFICATION in inference_selected_options, \
-                   'Detection and Classification have to be included as inference option in config ' \
-                   'in order to save video frames'
-
-            videos_path = inference_config['videos_path']
-            videos_output_path = inference_config['videos_output_path']
+            videos_path = inference_videos_config['path']
+            videos_output_path = inference_videos_config['output_path']
             for video_name in os.listdir(videos_path):
                 video_path = '{}/{}'.format(videos_path, video_name)
                 video_output_path = '{}/{}'.format(videos_output_path, video_name)
@@ -141,7 +139,7 @@ def display_menu(config):
 
                 out = cv2.VideoWriter(add_prefix_before_file_extension(video_output_path, 'labeled'),
                                       cv2.VideoWriter_fourcc(*'mp4v'), fps, size)  \
-                    if inference_config['videos_save_labeled'] else None
+                    if inference_videos_config['save_labeled'] else None
 
                 while success and frame_id < frames:
                     cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame_id+frame_id)
@@ -159,14 +157,14 @@ def display_menu(config):
                     save_video_frame_dfs(frame_id, detected_bounding_boxes, detections_df,
                                          segmentation_bounding_boxes, segmentations_df, video_output_path)
 
-                    if out is not None or inference_config['videos_show_labeled_frame']:
+                    if out is not None or inference_videos_config['show_labeled_frame']:
                         frame = \
                             draw_bounding_boxes_on_image(frame, detected_bounding_boxes + segmentation_bounding_boxes)
 
                         if out is not None:
                             out.write(frame)
 
-                        if inference_config['videos_show_labeled_frame']:
+                        if inference_videos_config['show_labeled_frame']:
                             cv2.imshow(video_name, frame)
                             cv2.waitKey(1)
 
@@ -176,11 +174,54 @@ def display_menu(config):
                 if out is not None:
                     out.release()
 
+        elif mode_selected_option == MODE_INFERENCE_LIVE:
+            video_name = f'{time.time()}.mp4'
+            video_output_path = '{}/{}'.format(inference_videos_config['output_path'], video_name)
+            detections_df, segmentations_df = get_video_dfs(video_output_path)
+            cap = cv2.VideoCapture(0)
+            fps = int(cap.get(cv2.CAP_PROP_FPS))
+            size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+
+            out = cv2.VideoWriter(add_prefix_before_file_extension(video_output_path, 'labeled'),
+                                  cv2.VideoWriter_fourcc(*'mp4v'), fps, size) \
+                if inference_videos_config['save_labeled'] else None
+
+            frame_id = 0
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    print("Can't receive frame.")
+                    break
+
+                detected_bounding_boxes, segmentation_bounding_boxes, masks, _ = \
+                    inference_dispatcher.dispatch(frame)
+
+                save_video_frame_dfs(frame_id, detected_bounding_boxes, detections_df,
+                                     segmentation_bounding_boxes, segmentations_df, video_output_path)
+
+                if out is not None or inference_videos_config['show_labeled_frame']:
+                    frame = \
+                        draw_bounding_boxes_on_image(frame, detected_bounding_boxes + segmentation_bounding_boxes)
+
+                    if out is not None:
+                        out.write(frame)
+
+                    if inference_videos_config['show_labeled_frame']:
+                        cv2.imshow(video_name, frame)
+                        if cv2.waitKey(1) == ord('q'):
+                            break
+
+                print(f'Frame {frame_id} processed.')
+                frame_id += 1
+
+            cap.release()
+            if out is not None:
+                out.release()
+
         elif mode_selected_option == MODE_LABEL_IMAGES:
             assert INFERENCE_DETECTION in inference_selected_options \
                 and INFERENCE_CLASSIFICATION in inference_selected_options, \
-                'Detection and Classification have to be included as inference option in config ' \
-                'in order to label images'
+                'Detection and Classification have to be included as inference option in config to label images.'
 
             df = get_gtsrb_df() if image_labeling_config['create_new_df'] \
                 else pd.read_csv(image_labeling_config['save_path'])
@@ -238,7 +279,7 @@ def display_menu(config):
                 cv2.waitKey(1)
 
             cap.release()
-            cv2.destroyAllWindows()
+    cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':
