@@ -252,8 +252,8 @@ def display_menu(config):
             _ = RoadSignClassification(config['classification'], mode='train')
 
     elif mode_selected_option == MODE_PLAY_LABELED_VIDEOS:
-        videos_path = inference_config['videos_path']
-        videos_output_path = inference_config['videos_output_path']
+        videos_path = inference_videos_config['path']
+        videos_output_path = inference_videos_config['output_path']
         detection_label_names = read_file_lines(config['classification']['label_names_path'])
         segmentation_label_names = read_file_lines(config['segmentation']['labels_path'])
         segmentation_label_colors = read_file_lines(config['segmentation']['colors_path'])
