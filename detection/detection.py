@@ -263,7 +263,7 @@ class RoadSignDetection:
             if current_epoch == self.epochs or current_epoch % self.save_plot_after_x_epochs == 0:
                 self.generate_and_save_loss_plots(train_loss_list, val_loss_list, current_epoch)
 
-    def predict_bounding_boxes(self, image_path, detection_threshold=0.77):
+    def predict_bounding_boxes(self, image_path, detection_threshold=0.5):
         image = image_path
 
         if type(image_path) == str:
