@@ -255,7 +255,7 @@ def display_menu(config):
         videos_path = inference_videos_config['path']
         videos_output_path = inference_videos_config['output_path']
         detection_label_names = read_file_lines(config['classification']['label_names_path'])
-        segmentation_label_names = read_file_lines(config['segmentation']['labels_path'])
+        segmentation_label_names = read_file_lines(config['segmentation']['label_names_path'])
         segmentation_label_colors = read_file_lines(config['segmentation']['colors_path'])
 
         for video_name in os.listdir(videos_path):

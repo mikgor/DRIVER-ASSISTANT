@@ -1,0 +1,20 @@
+Nieoznakowane
+Droga
+Chodnik
+Budynek
+Ściana
+Ogrodzenie
+Słup
+Sygnalizacja świetlna
+Znak drogowy
+Roślinność
+Teren
+Niebo
+Osoba
+Kolarz
+Samochód
+Ciężarówka
+Autobus
+Pociąg
+Motocykl
+Rower

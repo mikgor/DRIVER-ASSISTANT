@@ -5,8 +5,9 @@ from utils import read_file_lines
 
 
 class SemanticSegmentationMask:
-    def __init__(self, color_mask, label_id, label_name, label_color, masked_image_opacity):
+    def __init__(self, color_mask, label_id, label, label_name, label_color, masked_image_opacity):
         self.label_id = label_id
+        self.label = label
         self.label_name = label_name
         self.label_color = label_color
         self.masked_image_opacity = masked_image_opacity
@@ -47,13 +48,14 @@ class SemanticSegmentation:
         self.masked_image_opacity = config['masked_image_opacity']
 
         self.__load_model(config['load_model_path'])
-        self.__load_data(config['labels_path'], config['colors_path'])
+        self.__load_data(config['labels_path'], config['label_names_path'], config['colors_path'])
 
     def __load_model(self, path):
         self.model = cv2.dnn.readNet(path)
 
-    def __load_data(self, labels_path, colors_path):
+    def __load_data(self, labels_path, label_names_path, colors_path):
         self.labels = read_file_lines(labels_path)
+        self.label_names = read_file_lines(label_names_path)
 
         colors = read_file_lines(colors_path)
 
@@ -85,7 +87,8 @@ class SemanticSegmentation:
         bounding_boxes: [BoundingBox] = []
 
         for label in self.labels_to_detect:
-            mask = SemanticSegmentationMask(color_mask, self.labels.index(label), label,
+            label_id = self.labels.index(label)
+            mask = SemanticSegmentationMask(color_mask, label_id, label, self.label_names[label_id],
                                             self.labels_colors_dict[label], self.masked_image_opacity)
             masks.append(mask)
             bounding_boxes += mask.get_bounding_boxes(self.detection_min_object_area)
