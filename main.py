@@ -8,11 +8,11 @@ import numpy as np
 import imgaug as ia
 import pandas as pd
 
-from classification import RoadSignClassification
-from detection import RoadSignDetection
-from image_labeling import label_image
+from classification.classification import RoadSignClassification
+from detection.detection import RoadSignDetection
+from utils.image_labeling import label_image
 from inference_dispatcher import InferenceDispatcher
-from utils import load_and_transform_image, get_video_dfs, draw_bounding_boxes_on_image, save_video_frame_dfs, \
+from utils.utils import load_and_transform_image, get_video_dfs, draw_bounding_boxes_on_image, save_video_frame_dfs, \
     add_prefix_before_file_extension, read_file_lines, get_video_df_frame_bounding_boxes, get_gtsrb_df
 
 

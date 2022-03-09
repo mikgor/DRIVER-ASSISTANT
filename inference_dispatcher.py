@@ -1,9 +1,9 @@
 import time
 
-from bounding_box import BoundingBox
-from classification import RoadSignClassification
-from detection import RoadSignDetection
-from segmentation import SemanticSegmentation, SemanticSegmentationMask
+from detection.bounding_box import BoundingBox
+from classification.classification import RoadSignClassification
+from detection.detection import RoadSignDetection
+from segmentation.segmentation import SemanticSegmentation, SemanticSegmentationMask
 
 
 class InferenceDispatcher:

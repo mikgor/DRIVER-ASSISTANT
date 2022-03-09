@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
-from bounding_box import BoundingBox
-from utils import read_file_lines
+from detection.bounding_box import BoundingBox
+from utils.utils import read_file_lines
 
 
 class SemanticSegmentationMask:

@@ -115,7 +115,6 @@ main*.py
 /data/test
 /data/old_models
 /data/classification
-/data/detection/enet/model.net
 /data/detection/models
 /data/detection/Augmented
 /data/detection/*augmented*

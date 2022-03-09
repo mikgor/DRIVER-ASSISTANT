@@ -13,7 +13,7 @@ import pandas as pd
 import albumentations
 from albumentations.pytorch import ToTensorV2
 
-from bounding_box import BoundingBox
+from detection.bounding_box import BoundingBox
 
 
 def read_file_lines(path):

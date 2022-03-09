@@ -1,8 +1,8 @@
 import cv2
 import mouse
 
-from bounding_box import BoundingBox
-from utils import draw_bounding_boxes_on_image
+from detection.bounding_box import BoundingBox
+from utils.utils import draw_bounding_boxes_on_image
 
 
 def mouse_on_click(mouse_click_positions, image_shape, bounding_boxes,

@@ -1,6 +1,6 @@
 classification:
-  labels_path: 'labels.txt'
-  label_names_path: 'label_names.txt'
+  labels_path: 'classification/labels.txt'
+  label_names_path: 'classification/label_names.txt'
   shape: 100
   model_path: 'data/classification/models/model'
   save_trained_model: true
@@ -17,7 +17,7 @@ detection:
   epochs: 10
   first_object_class_id: 1
   data_path: 'data/detection/'
-  labels_path: 'labels.txt'
+  labels_path: 'classification/labels_single.txt'
   train_data_annotations_path: 'data/detection/train.csv'
   validation_data_annotations_path: 'data/detection/test.csv'
   model_path: null
@@ -33,12 +33,13 @@ detection:
 segmentation:
   labels_to_detect:
     - 'TrafficLight'
-  load_model_path: 'data/detection/enet/model.net'
-  labels_path: 'data/detection/enet/labels.txt'
-  label_names_path: 'data/detection/enet/label_names_pl.txt'
-  colors_path: 'data/detection/enet/colors.txt'
-  detection_min_object_area: 1000
-  masked_image_opacity: 0.3
+    - 'Car'
+  load_model_path: 'segmentation/model.net'
+  labels_path: 'segmentation/labels.txt'
+  label_names_path: 'segmentation/label_names_pl.txt'
+  colors_path: 'segmentation/colors.txt'
+  detection_min_object_area: 3000
+  masked_image_opacity: 0.7
 
 startup:
   seed: 1

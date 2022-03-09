@@ -11,9 +11,9 @@ import torch
 import matplotlib.pyplot as plt
 import time
 
-from bounding_box import BoundingBox
-from utils import collate_fn, transform_to_tensor_v2, read_file_lines
-from utils import read_gtsrb_csv_row, generate_augmented_images_and_bounding_boxes_dataset
+from detection.bounding_box import BoundingBox
+from utils.utils import collate_fn, transform_to_tensor_v2, read_file_lines
+from utils.utils import read_gtsrb_csv_row, generate_augmented_images_and_bounding_boxes_dataset
 
 
 class RoadSignDataset(Dataset):

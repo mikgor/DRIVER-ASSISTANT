@@ -3,7 +3,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.callbacks import CSVLogger
 from sklearn.model_selection import train_test_split
 
-from utils import *
+from utils.utils import *
 
 
 class RoadSignClassification:
