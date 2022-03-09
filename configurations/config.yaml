@@ -53,3 +53,14 @@ inference:
   videos_output_path: 'data/test/videos_output'
   videos_save_labeled: true
   videos_show_labeled_frame: true
+
+image_labeling:
+  images_folder_path: 'data/detection/Train_frames'
+  image_prefix_path: 'Train_frames'
+  save_path: 'data/detection/train_frames.csv'
+  create_new_df: false
+  window_x: 0
+  window_y: 0
+  offset_x: 0
+  offset_y: 0
+  default_class_id: 1

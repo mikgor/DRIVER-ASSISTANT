@@ -5,12 +5,14 @@ import cv2
 import yaml
 import numpy as np
 import imgaug as ia
+import pandas as pd
 
 from classification import RoadSignClassification
 from detection import RoadSignDetection
+from image_labeling import label_image
 from inference_dispatcher import InferenceDispatcher
 from utils import load_and_transform_image, get_video_dfs, draw_bounding_boxes_on_image, save_video_frame_dfs, \
-    add_prefix_before_file_extension, read_file_lines, get_video_df_frame_bounding_boxes
+    add_prefix_before_file_extension, read_file_lines, get_video_df_frame_bounding_boxes, get_gtsrb_df
 
 
 def load_configuration():
@@ -68,6 +70,7 @@ def display_menu(config):
     MODE_INFERENCE_VIDEOS = 2
     MODE_TRAIN = 3
     MODE_PLAY_LABELED_VIDEOS = 4
+    MODE_LABEL_IMAGES = 5
 
     INFERENCE_DETECTION = 1
     INFERENCE_CLASSIFICATION = 2
@@ -78,14 +81,17 @@ def display_menu(config):
 
     startup_config = config['startup']
     inference_config = config['inference']
+    image_labeling_config = config['image_labeling']
 
     mode_options = [(MODE_INFERENCE_IMAGES, 'Inference (images)'),
                     (MODE_INFERENCE_VIDEOS, 'Inference (videos)'),
                     (MODE_TRAIN, 'Train'),
-                    (MODE_PLAY_LABELED_VIDEOS, 'Apply labels to videos and play')]
+                    (MODE_PLAY_LABELED_VIDEOS, 'Apply labels to videos and play'),
+                    (MODE_LABEL_IMAGES, 'Label images')]
     mode_selected_option = input_from_options('Model mode', mode_options, startup_config['mode_selected_option'])
 
-    if mode_selected_option == MODE_INFERENCE_IMAGES or mode_selected_option == MODE_INFERENCE_VIDEOS:
+    if mode_selected_option == MODE_INFERENCE_IMAGES or mode_selected_option == MODE_INFERENCE_VIDEOS \
+            or mode_selected_option == MODE_LABEL_IMAGES:
         inference_options = [(INFERENCE_DETECTION, 'Detection'),
                              (INFERENCE_CLASSIFICATION, 'Classification'),
                              (INFERENCE_SEMANTIC_SEGMENTATION, 'Semantic segmentation')]
@@ -169,6 +175,27 @@ def display_menu(config):
                 cap.release()
                 if out is not None:
                     out.release()
+
+        elif mode_selected_option == MODE_LABEL_IMAGES:
+            assert INFERENCE_DETECTION in inference_selected_options \
+                and INFERENCE_CLASSIFICATION in inference_selected_options, \
+                'Detection and Classification have to be included as inference option in config ' \
+                'in order to label images'
+
+            df = get_gtsrb_df() if image_labeling_config['create_new_df'] \
+                else pd.read_csv(image_labeling_config['save_path'])
+            paths = df['Path'].tolist()
+
+            for image_name in os.listdir(image_labeling_config['images_folder_path']):
+                if '{}/{}'.format(image_labeling_config['image_prefix_path'], image_name) in paths:
+                    continue
+
+                image_path = '{}/{}'.format(image_labeling_config['images_folder_path'], image_name)
+
+                image = load_and_transform_image(image_path, None)
+                detected_bounding_boxes, _, _, _ = inference_dispatcher.dispatch(image)
+                df = label_image(image_labeling_config, image, image_path, df, detected_bounding_boxes,
+                                 config['detection']['first_object_class_id'])
 
         cv2.waitKey(0)
 
