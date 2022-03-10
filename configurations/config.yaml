@@ -66,4 +66,4 @@ image_labeling:
   window_y: 0
   offset_x: 0
   offset_y: 0
-  default_class_id: 1
+  default_label_id: 1

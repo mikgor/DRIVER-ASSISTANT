@@ -186,7 +186,7 @@ Loads videos from inference videos config `path`, adds bounding boxes from saved
 Uses detection and classification to semi-automated labeling (bounding box and label id). 
 Loads images from image labeling config `images_folder_path`, and allows actions:
 * Left click on box-free area to select starting x and starting y for bounding box. 
-Do it again to choose ending x and ending y. Once done `default_class_id` is used as
+Do it again to choose ending x and ending y. Once done `default_label_id` is used as
 box id and console input waits for updated label id (dismiss by pressing Enter).
 * Left click inside box area to updated label id for bounding box. Console input waits 
 for updated label id (dismiss by pressing Enter).

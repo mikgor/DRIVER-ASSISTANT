@@ -16,7 +16,7 @@ def get_bounding_box_if_point_inside(x, y, bounding_boxes):
 
 
 def mouse_on_click(mouse_click_positions, image_shape, bounding_boxes,
-                   window_x, window_y, offset_x, offset_y, default_class_id):
+                   window_x, window_y, offset_x, offset_y, default_label_id):
     h, w, _ = image_shape
     x, y = mouse.get_position()
     x -= offset_x
@@ -30,7 +30,7 @@ def mouse_on_click(mouse_click_positions, image_shape, bounding_boxes,
 
         if len(mouse_click_positions) % 2 == 0:
             bounding_boxes.append(
-                BoundingBox(*mouse_click_positions[-2], *mouse_click_positions[-1], label_id=default_class_id))
+                BoundingBox(*mouse_click_positions[-2], *mouse_click_positions[-1], label_id=default_label_id))
 
             provided_id = input(f"label_id for {mouse_click_positions[-2]}, ({x}, {y}): ")
             if provided_id != '':
@@ -87,7 +87,7 @@ def label_image(config, image, image_path, df, bounding_boxes, first_object_clas
     offset_y = config['offset_y']
 
     mouse.on_click(mouse_on_click, args=(mouse_click_positions, shape, bounding_boxes,
-                                         window_x, window_y, offset_x, offset_y, config['default_class_id']))
+                                         window_x, window_y, offset_x, offset_y, config['default_label_id']))
     mouse.on_right_click(mouse_on_right_click, args=(shape, bounding_boxes, window_x, window_y, offset_x, offset_y))
 
     update_and_show_image(image, image_path, bounding_boxes, window_x, window_y)
