@@ -5,6 +5,16 @@ from detection.bounding_box import BoundingBox
 from utils.utils import draw_bounding_boxes_on_image
 
 
+def get_bounding_box_if_point_inside(x, y, bounding_boxes):
+    for bounding_box in bounding_boxes:
+        start_x, start_y, end_x, end_y = bounding_box.get_coords()
+
+        if start_x <= x <= end_x and start_y <= y <= end_y:
+            return bounding_box
+
+    return None
+
+
 def mouse_on_click(mouse_click_positions, image_shape, bounding_boxes,
                    window_x, window_y, offset_x, offset_y, default_class_id):
     h, w, _ = image_shape
@@ -22,12 +32,25 @@ def mouse_on_click(mouse_click_positions, image_shape, bounding_boxes,
             bounding_boxes.append(
                 BoundingBox(*mouse_click_positions[-2], *mouse_click_positions[-1], label_id=default_class_id))
 
-            provided_id = input(f"Class ID for {mouse_click_positions[-2]}, ({x}, {y}): ")
+            provided_id = input(f"label_id for {mouse_click_positions[-2]}, ({x}, {y}): ")
             if provided_id != '':
                 bounding_boxes[-1].label_id = provided_id
 
             print(f"{mouse_click_positions[-2]}, ({x}, {y}) - {bounding_boxes[-1].label_id}. "
                   f"Press any key to update.")
+        else:
+            bounding_box = get_bounding_box_if_point_inside(x, y, bounding_boxes)
+
+            if bounding_box is not None:
+                bounding_boxes.remove(bounding_box)
+
+                provided_id = input(f"Update label_id for {bounding_box.get_coords()}: ")
+                if provided_id != '':
+                    bounding_box.label_id = provided_id
+                    bounding_box.label_name = ''
+                    bounding_boxes.append(bounding_box)
+                    mouse_click_positions.pop()
+                    print(f'Updated label_id: {bounding_box.label_id}. Press any key to update.')
 
 
 def mouse_on_right_click(image_shape, bounding_boxes, window_x, window_y, offset_x, offset_y):
@@ -40,13 +63,11 @@ def mouse_on_right_click(image_shape, bounding_boxes, window_x, window_y, offset
         x -= window_x
         y -= window_y
 
-        for bounding_box in bounding_boxes:
-            start_x, start_y, end_x, end_y = bounding_box.get_coords()
+        bounding_box = get_bounding_box_if_point_inside(x, y, bounding_boxes)
 
-            if start_x <= x <= end_x and start_y <= y <= end_y:
-                print(f'Removed box label_id: {bounding_box.label_id}. Press any key to update.')
-                bounding_boxes.remove(bounding_box)
-                break
+        if bounding_box is not None:
+            bounding_boxes.remove(bounding_box)
+            print(f'Removed label_id: {bounding_box.label_id}. Press any key to update.')
 
 
 def update_and_show_image(image, image_path, bounding_boxes, window_x, window_y):
@@ -77,7 +98,7 @@ def label_image(config, image, image_path, df, bounding_boxes, first_object_clas
 
         if key == 122:  # z
             if len(bounding_boxes) > 0:
-                print(f'Removed box label_id: {bounding_boxes[-1].label_id}.')
+                print(f'Removed label_id: {bounding_boxes[-1].label_id}.')
                 bounding_boxes.pop()
                 update_and_show_image(image, image_path, bounding_boxes, window_x, window_y)
         elif key == 32:  # space
