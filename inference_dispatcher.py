@@ -31,10 +31,13 @@ class InferenceDispatcher:
 
         if self.classification:
             classified_labels = self.classification.model_predict_data(detected_images)
-            for (index, bounding_box) in enumerate(detected_bounding_boxes):
-                (classified_label_id, classified_label_name) = classified_labels[index]
-                bounding_box.label_id = classified_label_id
-                bounding_box.label_name = classified_label_name
+            if self.detection:
+                for (index, bounding_box) in enumerate(detected_bounding_boxes):
+                    (classified_label_id, classified_label_name) = classified_labels[index]
+                    bounding_box.label_id = classified_label_id
+                    bounding_box.label_name = classified_label_name
+            else:
+                detected_bounding_boxes.append(BoundingBox(0, 0, *image.shape[::-1][1:], *classified_labels[0]))
 
         if self.segmentation:
             masks, segmentation_bounding_boxes = self.segmentation.detect_objects_on_image(image)
