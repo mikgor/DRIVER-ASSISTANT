@@ -103,7 +103,8 @@ Detectable Polish road signs:
 * Krzyż św. andrzeja przed przejazdem kolejowo-drogowym jednotorowym
 
 ### Semantic segmentation
-Classifies each pixel in the image. Returns masked image and bounding boxes.
+Classifies each pixel in the image. Returns masked image and bounding boxes for
+labels selected in segmentation config `labels_to_detect`.
 Detectable object names:
 * Unlabeled
 * Road
@@ -189,10 +190,11 @@ Loads images from image labeling config `images_folder_path`, and allows actions
 Do it again to choose ending x and ending y. Once done `default_label_id` is used as
 box id and console input waits for updated label id (dismiss by pressing Enter).
 * Left click inside box area to updated label id for bounding box. Console input waits 
-for updated label id (dismiss by pressing Enter).
+for updated label id (dismiss by pressing `Enter`).
 * Right click inside box area to delete bounding box.
 * Press `z` key to delete most recently added bounding box.
 * Press any key (except `z`) to apply changes to displayed view.
+* Press `Space` to save boxes to .csv and display next image.
 
 Image labeling functions: [`function_selected_options`]. Both are required.
 * Detection [1]
