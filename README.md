@@ -1,5 +1,7 @@
 # DRIVER ASSISTANT
-DRIVER ASSISTANT (DA) is an application that has implemented following modes:
+[![Detection and classification example](https://s439393.students.wmi.amu.edu.pl/da/detection_and_classification_and_segmentation_example.png)](https://s439393.students.wmi.amu.edu.pl/da/detection_and_classification_and_segmentation_example.png)
+
+DRIVER ASSISTANT (DA) is an application that has implemented following functions:
 
 ### Detection
 Finds bounding boxes of road signs, including sign object/ classified sign id 
@@ -128,12 +130,14 @@ Detectable object names:
 * Bicycle
 
 ## Modes
-After running main.py, mode specified in config executes. If mode not provided in config, 
-console menu appears and allows to choose so. 
-
+After running main.py, mode specified in config executes.
 Specify mode using number in startup config `mode_selected_option`. 
 
 Specify mode function using number(s) in startup config: `function_selected_options`.
+
+If mode not provided in config, console menu appears and allows to choose so:
+
+[![Menu](https://s439393.students.wmi.amu.edu.pl/da/menu.png)](https://s439393.students.wmi.amu.edu.pl/da/menu.png)
 
 ### Inference [1-3]
 Allows to detect and classify road signs and detect (using semantic segmentation) some of 
