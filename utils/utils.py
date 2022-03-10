@@ -332,3 +332,24 @@ def get_video_df_frame_bounding_boxes(video_df, frame_id, label_names, label_col
         bounding_boxes.append(bounding_box)
 
     return bounding_boxes
+
+
+def create_sign_classification_dataset_from_gtsrb_df(df_path, data_prefix_path, destination_path):
+    df = pd.read_csv(df_path)
+
+    index = 0
+    for _, row in df.iterrows():
+        _, _, path, bounding_box = read_gtsrb_csv_row(row)
+        image_name = path.split('/')[-1]
+        save_path = add_prefix_before_file_extension(
+            f'{destination_path}/{bounding_box.label_id}/{image_name}', index)
+
+        image = load_and_transform_image(f'{data_prefix_path}/{path}', None)
+        box_image = image.astype("uint8")[bounding_box.start_y:bounding_box.end_y,
+                                          bounding_box.start_x:bounding_box.end_x]
+
+        os.makedirs(f'{destination_path}/{bounding_box.label_id}', exist_ok=True)
+        cv2.imwrite(save_path, box_image)
+        index = index + 1
+
+        print(save_path)

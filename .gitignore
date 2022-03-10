@@ -114,7 +114,9 @@ pip-selfcheck.json
 main*.py
 /data/test
 /data/old_models
-/data/classification
+/data/classification/models
+/data/classification/test
+/data/classification/train
 /data/detection/models
 /data/detection/Augmented
 /data/detection/*augmented*
