@@ -232,5 +232,6 @@ Image labeling functions: [`function_selected_options`]. Both are required.
     * Train_frames (data/detection/Train_frames) [405 images] - YouTube & Google Graphics
 * Classification
     * Train (data/classification/train) [16 702 images] and test data (data/classification/test) [4 298 images]- https://www.kaggle.com/kasia12345/polish-traffic-signs-dataset
+    * Train_frames (data/classification/train_frames) [1 280 images] - Detection/Train_frames signs
 * Semantic segmentation
     * Pre-trained model (segmentation/model.net) - Cityscapes Dataset
