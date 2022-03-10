@@ -64,6 +64,6 @@ image_labeling:
   create_new_df: false
   window_x: 0
   window_y: 0
-  offset_x: 0
-  offset_y: 0
+  offset_x: 8
+  offset_y: 31
   default_label_id: 1
