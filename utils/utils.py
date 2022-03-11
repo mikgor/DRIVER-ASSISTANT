@@ -334,21 +334,24 @@ def get_video_df_frame_bounding_boxes(video_df, frame_id, label_names, label_col
     return bounding_boxes
 
 
-def create_sign_classification_dataset_from_gtsrb_df(df_path, data_prefix_path, destination_path):
+def create_sign_classification_dataset_from_gtsrb_df(df_path, destination_path, detection_config,
+                                                     classification_config):
     df = pd.read_csv(df_path)
+
+    labels = read_file_lines(classification_config['labels_path'])
 
     index = 0
     for _, row in df.iterrows():
         _, _, path, bounding_box = read_gtsrb_csv_row(row)
-        image_name = path.split('/')[-1]
-        save_path = add_prefix_before_file_extension(
-            f'{destination_path}/{bounding_box.label_id}/{image_name}', index)
-
-        image = load_and_transform_image(f'{data_prefix_path}/{path}', None)
+        image = load_and_transform_image(os.path.join(detection_config['data_path'], path), None)
         box_image = image.astype("uint8")[bounding_box.start_y:bounding_box.end_y,
                                           bounding_box.start_x:bounding_box.end_x]
 
-        os.makedirs(f'{destination_path}/{bounding_box.label_id}', exist_ok=True)
+        image_name = path.split('/')[-1]
+        save_dir_path = os.path.join(destination_path,
+                                     labels[bounding_box.label_id-detection_config['first_object_class_id']])
+        save_path = add_prefix_before_file_extension(os.path.join(save_dir_path, image_name), index)
+        os.makedirs(save_dir_path, exist_ok=True)
         cv2.imwrite(save_path, box_image)
         index = index + 1
 

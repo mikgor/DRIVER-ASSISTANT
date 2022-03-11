@@ -2,11 +2,16 @@ classification:
   labels_path: 'classification/labels.txt'
   label_names_path: 'classification/label_names.txt'
   shape: 100
+  epochs: 100
+  batch_size: 50
   model_path: 'data/classification/models/model'
   save_trained_model: true
   save_trained_model_path: 'data/classification/models/new_model'
-  test_data_path: 'data/classification/test'
-  train_data_path: 'data/classification/train'
+  test_data_paths:
+    - 'data/classification/test'
+  train_data_paths:
+    - 'data/classification/train'
+    - 'data/classification/Train_frames'
   datasets_augmentation:
     augment_train_dataset: true
     augment_type: 0

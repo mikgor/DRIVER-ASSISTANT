@@ -15,7 +15,7 @@ class RoadSignClassification:
         self.model_path = config['model_path']
         self.save_trained_model = config['save_trained_model']
         self.save_trained_model_path = config['save_trained_model_path']
-        self.test_data_path = config['test_data_path']
+        self.test_data_paths = config['test_data_paths']
 
         if mode == 'train':
             self.model = self.get_model()
@@ -23,7 +23,7 @@ class RoadSignClassification:
             # Obtaining training data
             print("Obtaining training data...")
             self.train_images, self.train_labels = self.get_data(
-                config['train_data_path'], config['datasets_augmentation'])
+                config['train_data_paths'], config['datasets_augmentation'])
 
             # Turn a single categorical column into many indicator columns (A-1, A-11, A-11a, ...)
             self.train_labels = pd.get_dummies(self.train_labels).values
@@ -34,7 +34,8 @@ class RoadSignClassification:
                 self.train_images, self.train_labels, random_state=1)
 
             print("Training model...")
-            self.history = self.train_model(train_x, train_y, validation_x, validation_y)
+            self.history = self.train_model(train_x, train_y, validation_x, validation_y,
+                                            config['epochs'], config['batch_size'])
 
             if self.save_trained_model:
                 print("Saving model...")
@@ -56,16 +57,17 @@ class RoadSignClassification:
     def load_and_resize_image(self, path):
         return load_and_transform_image(path, self.shape)
 
-    def get_data(self, path, config=None):
+    def get_data(self, paths, config=None):
         images = []
         image_labels = []
 
-        for sign_code in os.listdir(path):
-            for sign_image_name in os.listdir('{}/{}'.format(path, sign_code)):
-                sign_image_path = '{}/{}'.format(sign_code, sign_image_name)
-                image = self.load_and_resize_image(os.path.join(path, sign_image_path))
-                images.append(image)
-                image_labels.append(sign_code)
+        for path in paths:
+            for sign_code in os.listdir(path):
+                for sign_image_name in os.listdir('{}/{}'.format(path, sign_code)):
+                    sign_image_path = '{}/{}'.format(sign_code, sign_image_name)
+                    image = self.load_and_resize_image(os.path.join(path, sign_image_path))
+                    images.append(image)
+                    image_labels.append(sign_code)
 
         if config and config['augment_train_dataset']:
             print('Augmenting dataset...')
@@ -73,6 +75,8 @@ class RoadSignClassification:
 
             image_labels_copy = image_labels.copy()
             image_labels = image_labels + image_labels_copy
+
+        print(f"Dataset length: {len(images)}")
 
         return np.array(images), image_labels
 
@@ -132,10 +136,10 @@ class RoadSignClassification:
 
     def model_predict_test_data(self, show_images=False):
         print("Obtaining testing data...")
-        test_images, test_labels = self.get_data(self.test_data_path)
+        test_images, test_labels = self.get_data(self.test_data_paths)
 
         predicted = 0
-        total = len(self.test_images)
+        total = len(test_images)
 
         for index in range(total):
             image = test_images[index:index+1]
