@@ -222,16 +222,28 @@ Image labeling functions: [`function_selected_options`]. Both are required.
 1. Change working directory to `DRIVER-ASSISTANT/configurations`.
 2. Create a copy of config.yaml named _config.yaml and adjust parameters if needed.
 
-## Data sources
-* Test data (data/test) - Google Street View
+## Data organisation & sources
+* Test data (data/test)
     * Test images (data/test/images) - Google Street View & Google Graphics
     * Test signs (data/test/signs) - Selected from data/classification/train
     * Test videos (data/test/videos) - YouTube
 * Detection
     * Train (data/detection/Train) with annotations (data/detection/train.csv) [39 270 images] and Test data (data/detection/Test) with annotations (data/detection/test.csv) [12 630 images] - https://www.kaggle.com/meowmeowmeowmeowmeow/gtsrb-german-traffic-sign
-    * Train_frames (data/detection/Train_frames) [405 images] - YouTube & Google Graphics
+    * Train_frames (data/detection/Train_frames) [413 images] - YouTube & Google Graphics & Google Street View
+    * Test_frames (data/detection/Test_frames) [69 images] - Google Street View
+    * train_subset.csv (data/detection/train_subset.csv) [350 images] & test_subset.csv 
+    (data/detection/test_subset.csv) [70 images] - random signs from GTSRB looking similarly to Polish 
+    (B-1 [id: 15 -> 26], B-2 [id: 17 -> 28], B-20 [id: 14 -> 29], B-25 [id: 9 -> 32], 
+    B-29 [id: 29 -> 45], B-33 [id: 0-5, 7-8 -> 35], D-1 [id: 12 -> 59]) using 
+    `create_random_subset_from_gtsrb_df('data/detection/X.csv', 'data/detection/X_subset.csv', 'ClassId',
+    [15, 17, 14, 9, 29, 0, 1, 2, 3, 4, 5, 7, 8, 12], [26, 28, 29, 32, 45, 35, 35, 35, 35, 35, 35, 35, 35, 59], Y)`
 * Classification
     * Train (data/classification/train) [16 702 images] and test data (data/classification/test) [4 298 images]- https://www.kaggle.com/kasia12345/polish-traffic-signs-dataset
-    * Train_frames (data/classification/train_frames) [1 280 images] - Detection/Train_frames signs
+    * Train_frames (data/classification/Test_frames) [1 293 images] - random signs from detection/Train_frames created using
+    `create_sign_classification_dataset_from_gtsrb_df('data/detection/train_frames.csv', 'data/classification/Train_frames', config['detection'],
+    config['classification'])`
+    * Test_frames (data/classification/Test_frames) [116 images] - random signs from detection/Test_frames created using
+    `create_sign_classification_dataset_from_gtsrb_df('data/detection/test_frames.csv', 'data/classification/Test_frames', config['detection'],
+    config['classification'])`
 * Semantic segmentation
     * Pre-trained model (segmentation/model.net) - Cityscapes Dataset

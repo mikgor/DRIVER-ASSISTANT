@@ -192,17 +192,15 @@ def augment_dataset(augment_type, images, bounding_boxes=None, class_ids=None, i
     return images, bounding_boxes, class_ids, image_paths
 
 
-def generate_augmented_images_and_bounding_boxes_dataset(data_annotations_path, data_path='data/detection/',
-                                                         augmented_data_annotations_path_infix='_augmented',
+def generate_augmented_images_and_bounding_boxes_dataset(annotations, data_path='data/detection/',
                                                          augmented_data_path='Augmented/', augment_type=0,
                                                          combine_randomly=False, combined_class_id='x'):
-    data = pd.read_csv(data_annotations_path)
     images = []
     image_paths = []
     class_ids = []
     bounding_boxes = []
 
-    for index, row in data.iterrows():
+    for index, row in annotations.iterrows():
         _, _, path, bounding_box = read_gtsrb_csv_row(row)
         c_ids = [bounding_box.label_id]
         boxes = [ia.BoundingBox(*bounding_box.get_coords())]
@@ -220,8 +218,8 @@ def generate_augmented_images_and_bounding_boxes_dataset(data_annotations_path, 
                     path = '/'.join(path_split[0:-1]) + '/' + path_split[-1]
 
                 for n in range(number_of_combined_images-1):
-                    random_image_index = random.randint(0, len(data)-1)
-                    random_row = data.loc[random_image_index]
+                    random_image_index = random.randint(0, len(annotations)-1)
+                    random_row = annotations.loc[random_image_index]
                     _, _, random_path, random_bounding_box = read_gtsrb_csv_row(random_row)
 
                     c_ids.append(random_bounding_box.label_id)
@@ -263,15 +261,11 @@ def generate_augmented_images_and_bounding_boxes_dataset(data_annotations_path, 
             df.loc[len(df)] = [width, height, start_x, start_y, end_x, end_y, class_ids[index][o],
                                os.path.join(augmented_data_path, img_name)]
 
-    data_annotations_path_split = data_annotations_path.split('.')
     augmented_data_annotations_path = add_timestamp_before_file_extension(
-        data_annotations_path.split('.')[0] + augmented_data_annotations_path_infix
-        + '.' + data_annotations_path_split[1]
-    )
-
+        os.path.join(data_path, 'augmented_annotations.csv'))
     df.to_csv(augmented_data_annotations_path, index=False)
 
-    return augmented_data_annotations_path
+    return df
 
 
 def collate_fn(data):
@@ -356,3 +350,15 @@ def create_sign_classification_dataset_from_gtsrb_df(df_path, destination_path, 
         index = index + 1
 
         print(save_path)
+
+
+def create_random_subset_from_gtsrb_df(df_path, destination_path, column_name, values, new_values, rows_per_value):
+    df = pd.read_csv(df_path)
+    df_subset = get_gtsrb_df()
+
+    for index, value in enumerate(values):
+        df_matching = df.loc[df[column_name] == value].sample(rows_per_value)
+        df_matching[column_name] = new_values[index]
+        df_subset = df_subset.append(df_matching)
+
+    df_subset.to_csv(destination_path, index=False)

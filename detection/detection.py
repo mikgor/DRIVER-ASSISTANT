@@ -12,20 +12,18 @@ import matplotlib.pyplot as plt
 import time
 
 from detection.bounding_box import BoundingBox
-from utils.utils import collate_fn, transform_to_tensor_v2, read_file_lines
+from utils.utils import collate_fn, transform_to_tensor_v2, read_file_lines, get_gtsrb_df
 from utils.utils import read_gtsrb_csv_row, generate_augmented_images_and_bounding_boxes_dataset
 
 
 class RoadSignDataset(Dataset):
-    def __init__(self, data_path, annotations_path, shape, classes):
+    def __init__(self, data_path, annotations, shape, classes):
         self.height, self.width = shape
         self.classes = classes
         self.all_images = []
 
         # More classes than Background and Object
         self.multi_labels = len(classes) > 2
-
-        annotations = pd.read_csv(annotations_path)
 
         skipped_indices = []
         for index, row in annotations.iterrows():
@@ -105,11 +103,11 @@ class RoadSignDetection:
 
         if mode == 'train':
             self.train_data_loader = self.get_data_loader('Training', config['data_path'],
-                                                          config['train_data_annotations_path'],
+                                                          config['train_data_annotations_paths'],
                                                           config['datasets_augmentation'], shuffle=True)
 
             self.validation_data_loader = self.get_data_loader('Validating', config['data_path'],
-                                                               config['validation_data_annotations_path'],
+                                                               config['validation_data_annotations_paths'],
                                                                config['datasets_augmentation'])
 
             self.train_model()
@@ -117,15 +115,19 @@ class RoadSignDetection:
         elif mode == 'inference':
             self.model = self.load_model(self.model_path)
 
-    def get_data_loader(self, name, data_path, data_annotations_path, config, shuffle=False):
+    def get_data_loader(self, name, data_path, data_annotations_paths, config, shuffle=False):
         print(f"Obtaining {name} data...")
+
+        annotations = get_gtsrb_df()
+        for data_annotations_paths in data_annotations_paths:
+            annotations = annotations.append(pd.read_csv(data_annotations_paths))
 
         if config['augment_datasets']:
             print(f"Obtaining augmented {name} data...")
-            data_annotations_path = generate_augmented_images_and_bounding_boxes_dataset(
-                data_annotations_path, data_path, combine_randomly=config['combine_randomly'])
+            annotations = generate_augmented_images_and_bounding_boxes_dataset(
+                annotations, data_path, combine_randomly=config['combine_randomly'])
 
-        dataset = RoadSignDataset(data_path, data_annotations_path, self.shape, self.classes)
+        dataset = RoadSignDataset(data_path, annotations, self.shape, self.classes)
         print(f"{name} data length: {len(dataset)}")
 
         return DataLoader(dataset, batch_size=self.batch_size, shuffle=shuffle, num_workers=0, collate_fn=collate_fn)

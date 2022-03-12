@@ -9,6 +9,7 @@ classification:
   save_trained_model_path: 'data/classification/models/new_model'
   test_data_paths:
     - 'data/classification/test'
+    - 'data/classification/Test_frames'
   train_data_paths:
     - 'data/classification/train'
     - 'data/classification/Train_frames'
@@ -23,8 +24,12 @@ detection:
   first_object_class_id: 1
   data_path: 'data/detection/'
   labels_path: 'classification/labels_single.txt'
-  train_data_annotations_path: 'data/detection/train.csv'
-  validation_data_annotations_path: 'data/detection/test.csv'
+  train_data_annotations_paths:
+    - 'data/detection/train_subset.csv'
+    - 'data/detection/train_frames.csv'
+  validation_data_annotations_paths:
+    - 'data/detection/test_subset.csv'
+    - 'data/detection/test_frames.csv'
   model_path: null
   model_dir_path: 'data/detection/models/fasterrcnn'
   save_plot_after_x_epochs: 1
