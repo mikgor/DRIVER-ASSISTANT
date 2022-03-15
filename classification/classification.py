@@ -122,13 +122,14 @@ class RoadSignClassification:
             print(self.model.history)
 
     def save_history_metric(self, metric):
-        plt.plot(self.history.history[metric])
-        plt.plot(self.history.history['val_{}'.format(metric)])
-        plt.title('model {}'.format(metric))
-        plt.ylabel(metric)
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-        plt.savefig(os.path.join(self.save_trained_model_path, f'_{metric}.png'))
+        figure, ax = plt.subplots()
+        ax.plot(self.history.history[metric])
+        ax.plot(self.history.history['val_{}'.format(metric)])
+        ax.set_title('model {}'.format(metric))
+        ax.set_ylabel(metric)
+        ax.set_xlabel('epoch')
+        ax.legend(['train', 'validation'], loc='upper left')
+        figure.savefig(os.path.join(self.save_trained_model_path, f'_{metric}.png'))
 
     def evaluate_model(self, validation_x, validation_y):
         # The loss value & metrics values for the model.
