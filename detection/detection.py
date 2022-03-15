@@ -283,10 +283,13 @@ class RoadSignDetection:
         # Add batch dimension
         image = torch.unsqueeze(image, 0)
 
+        if self.device == 'cuda':
+            image = image.cuda()
+
         bounding_boxes: [BoundingBox] = []
 
         with torch.no_grad():
-            outputs = self.model(image)
+            outputs = self.model(image.to(self.device))
         outputs = [{k: v.to('cpu') for k, v in t.items()} for t in outputs]
 
         for index in range(len(outputs)):
