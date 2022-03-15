@@ -53,6 +53,10 @@ class SemanticSegmentation:
     def __load_model(self, path):
         self.model = cv2.dnn.readNet(path)
 
+        if cv2.cuda.getCudaEnabledDeviceCount() > 0:
+            self.model.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+            self.model.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+
     def __load_data(self, labels_path, label_names_path, colors_path):
         self.labels = read_file_lines(labels_path)
         self.label_names = read_file_lines(label_names_path)
