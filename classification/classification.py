@@ -1,7 +1,9 @@
+from tensorflow.core.protobuf.config_pb2 import ConfigProto
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPool2D
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.callbacks import CSVLogger
 from sklearn.model_selection import train_test_split
+from tensorflow.python.client.session import InteractiveSession
 
 from utils.utils import *
 
@@ -16,6 +18,10 @@ class RoadSignClassification:
         self.save_trained_model = config['save_trained_model']
         self.save_trained_model_path = config['save_trained_model_path']
         self.test_data_paths = config['test_data_paths']
+
+        config = ConfigProto()
+        config.gpu_options.allow_growth = True
+        session = InteractiveSession(config=config)
 
         if mode == 'train':
             self.model = self.get_model()
