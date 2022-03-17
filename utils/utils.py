@@ -281,36 +281,36 @@ def transform_to_tensor_v2():
     })
 
 
-def get_video_detections_df():
+def get_detections_df():
     return pd.DataFrame(columns=['FrameId', 'X1', 'Y1', 'X2', 'Y2', 'LabelId', 'Score'])
 
 
-def get_video_segmentations_df():
+def get_segmentations_df():
     return pd.DataFrame(columns=['FrameId', 'X1', 'Y1', 'X2', 'Y2', 'LabelId'])
 
 
-def get_video_dfs(video_output_path):
-    detections_df_path = video_output_path + '_detections.csv'
-    segmentations_df_path = video_output_path + '_segmentations.csv'
+def get_inference_dfs(output_path):
+    detections_df_path = output_path + '_detections.csv'
+    segmentations_df_path = output_path + '_segmentations.csv'
 
     detections_df = \
-        pd.read_csv(detections_df_path) if os.path.exists(detections_df_path) else get_video_detections_df()
+        pd.read_csv(detections_df_path) if os.path.exists(detections_df_path) else get_detections_df()
     segmentations_df = \
-        pd.read_csv(segmentations_df_path) if os.path.exists(segmentations_df_path) else get_video_segmentations_df()
+        pd.read_csv(segmentations_df_path) if os.path.exists(segmentations_df_path) else get_segmentations_df()
 
     return detections_df, segmentations_df
 
 
-def save_video_frame_dfs(frame_id, detection_bounding_boxes, detections_df,
-                         segmentation_bounding_boxes, segmentations_df, video_output_path):
+def save_frame_dfs(frame_id, detection_bounding_boxes, detections_df,
+                   segmentation_bounding_boxes, segmentations_df, output_path):
     for bounding_box in detection_bounding_boxes:
         detections_df.loc[len(detections_df)] = [frame_id] + bounding_box.get_as_df_row()
 
     for bounding_box in segmentation_bounding_boxes:
         segmentations_df.loc[len(segmentations_df)] = [frame_id] + bounding_box.get_as_df_row()[:5]
 
-    detections_df.to_csv(video_output_path + '_detections.csv', index=False)
-    segmentations_df.to_csv(video_output_path + '_segmentations.csv', index=False)
+    detections_df.to_csv(output_path + '_detections.csv', index=False)
+    segmentations_df.to_csv(output_path + '_segmentations.csv', index=False)
 
 
 def get_video_df_frame_bounding_boxes(video_df, frame_id, label_names, label_colors=None):

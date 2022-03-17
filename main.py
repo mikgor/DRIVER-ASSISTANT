@@ -12,7 +12,7 @@ from classification.classification import RoadSignClassification
 from detection.detection import RoadSignDetection
 from utils.image_labeling import label_image
 from inference_dispatcher import InferenceDispatcher
-from utils.utils import load_and_transform_image, get_video_dfs, draw_bounding_boxes_on_image, save_video_frame_dfs, \
+from utils.utils import load_and_transform_image, get_inference_dfs, draw_bounding_boxes_on_image, save_frame_dfs, \
     add_prefix_before_file_extension, read_file_lines, get_video_df_frame_bounding_boxes, get_gtsrb_df
 
 
@@ -83,6 +83,7 @@ def display_menu(config):
 
     startup_config = config['startup']
     inference_config = config['inference']
+    inference_images_config = inference_config['images']
     inference_videos_config = inference_config['videos']
     image_labeling_config = config['image_labeling']
 
@@ -107,25 +108,31 @@ def display_menu(config):
             config['segmentation'] if INFERENCE_SEMANTIC_SEGMENTATION in inference_selected_options else None,)
 
         if mode_selected_option == MODE_INFERENCE_IMAGES:
-            images_path = inference_config['images_path']
+            images_path = inference_images_config['path']
+            images_output_path = os.path.join(inference_images_config['output_path'], str(time.time()))
+            detections_df, segmentations_df = get_inference_dfs(images_output_path)
 
             for image_name in os.listdir(images_path):
                 image_path = '{}/{}'.format(images_path, image_name)
                 image = load_and_transform_image(image_path, None)
 
-                bounding_boxes, segmentation_bounding_boxes, masks, _ = inference_dispatcher.dispatch(image)
+                detected_bounding_boxes, segmentation_bounding_boxes, masks, _ = inference_dispatcher.dispatch(image)
 
-                image = draw_bounding_boxes_on_image(image, bounding_boxes + segmentation_bounding_boxes)
+                image = draw_bounding_boxes_on_image(image, detected_bounding_boxes + segmentation_bounding_boxes)
+
+                save_frame_dfs(image_name, detected_bounding_boxes, detections_df,
+                               segmentation_bounding_boxes, segmentations_df, images_output_path)
 
                 cv2.imshow(image_name, image)
 
         elif mode_selected_option == MODE_INFERENCE_VIDEOS:
             videos_path = inference_videos_config['path']
             videos_output_path = inference_videos_config['output_path']
+
             for video_name in os.listdir(videos_path):
                 video_path = '{}/{}'.format(videos_path, video_name)
                 video_output_path = '{}/{}'.format(videos_output_path, video_name)
-                detections_df, segmentations_df = get_video_dfs(video_output_path)
+                detections_df, segmentations_df = get_inference_dfs(video_output_path)
                 start_frame_id = max([int(detections_df.iloc[-1]['FrameId'])+1 if detections_df.size > 0 else 0,
                                      int(segmentations_df.iloc[-1]['FrameId'])+1 if segmentations_df.size > 0 else 0])
                 frame_id = start_frame_id
@@ -154,8 +161,8 @@ def display_menu(config):
                     print(f"Processed {(frame_id/frames):.3f}% ({frame_id} / {frames}). Time left: "
                           f"{((avg_sec_per_frame*(frames-frame_id))/60):.3f} minutes.")
 
-                    save_video_frame_dfs(frame_id, detected_bounding_boxes, detections_df,
-                                         segmentation_bounding_boxes, segmentations_df, video_output_path)
+                    save_frame_dfs(frame_id, detected_bounding_boxes, detections_df,
+                                   segmentation_bounding_boxes, segmentations_df, video_output_path)
 
                     if out is not None or inference_videos_config['show_labeled_frame']:
                         frame = \
@@ -177,7 +184,7 @@ def display_menu(config):
         elif mode_selected_option == MODE_INFERENCE_LIVE:
             video_name = f'{time.time()}.mp4'
             video_output_path = '{}/{}'.format(inference_videos_config['output_path'], video_name)
-            detections_df, segmentations_df = get_video_dfs(video_output_path)
+            detections_df, segmentations_df = get_inference_dfs(video_output_path)
             cap = cv2.VideoCapture(0)
             fps = int(cap.get(cv2.CAP_PROP_FPS))
             size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
@@ -196,8 +203,8 @@ def display_menu(config):
                 detected_bounding_boxes, segmentation_bounding_boxes, masks, _ = \
                     inference_dispatcher.dispatch(frame)
 
-                save_video_frame_dfs(frame_id, detected_bounding_boxes, detections_df,
-                                     segmentation_bounding_boxes, segmentations_df, video_output_path)
+                save_frame_dfs(frame_id, detected_bounding_boxes, detections_df,
+                               segmentation_bounding_boxes, segmentations_df, video_output_path)
 
                 if out is not None or inference_videos_config['show_labeled_frame']:
                     frame = \
@@ -261,7 +268,7 @@ def display_menu(config):
         for video_name in os.listdir(videos_path):
             video_path = '{}/{}'.format(videos_path, video_name)
             video_output_path = '{}/{}'.format(videos_output_path, video_name)
-            detections_df, segmentations_df = get_video_dfs(video_output_path)
+            detections_df, segmentations_df = get_inference_dfs(video_output_path)
             cap = cv2.VideoCapture(video_path)
             frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 

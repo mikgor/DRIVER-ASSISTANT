@@ -148,6 +148,8 @@ Inference modes: [`mode_selected_option`]
 
   Loads images from inference config `images_path`, applies
 chosen functions to each of images and displays them.
+All detected bounding boxes (from detection and segmentation) are saved to separate 
+.csv files.
 
 * Inference (videos) [2] 
 
