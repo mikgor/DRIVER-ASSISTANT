@@ -60,7 +60,9 @@ startup:
     - 3
 
 inference:
-  images_path: 'data/test/images'
+  images:
+    path: 'data/test/images'
+    output_path: 'data/test/images_output'
   videos:
     path: 'data/test/videos'
     output_path: 'data/test/videos_output'
