@@ -126,3 +126,4 @@ main*.py
 /data/detection/train.csv
 /configurations/_*
 /detection/models/*/*log*
+/detection/models/*/*.pth
