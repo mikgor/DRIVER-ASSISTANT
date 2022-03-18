@@ -125,3 +125,4 @@ main*.py
 /data/detection/test.csv
 /data/detection/train.csv
 /configurations/_*
+/detection/models/*/*log*

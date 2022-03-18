@@ -2,11 +2,11 @@ classification:
   labels_path: 'classification/labels.txt'
   label_names_path: 'classification/label_names.txt'
   shape: 100
-  epochs: 100
-  batch_size: 50
+  epochs: 200
+  batch_size: 80
   model_path: 'classification/models/augmented_model'
   save_trained_model: true
-  save_trained_model_path: 'classification/models/new_model'
+  save_trained_model_path: 'classification/models/augmented_model'
   test_data_paths:
     - 'data/classification/test'
     - 'data/classification/Test_frames'
@@ -18,9 +18,9 @@ classification:
     augment_type: 0
 
 detection:
-  batch_size: 4
+  batch_size: 6
   shape: 512
-  epochs: 10
+  epochs: 100
   first_object_class_id: 1
   data_path: 'data/detection/'
   labels_path: 'classification/labels_single.txt'
@@ -34,7 +34,7 @@ detection:
   model_dir_path: 'detection/models/frames_single'
   save_plot_after_x_epochs: 1
   save_model_after_x_epochs: 1
-  detection_threshold: 0.6
+  detection_threshold: 0.7
   datasets_augmentation:
     augment_datasets: true
     augment_type: 0
@@ -43,26 +43,20 @@ detection:
 segmentation:
   labels_to_detect:
     - 'TrafficLight'
-    - 'Car'
   load_model_path: 'segmentation/model.net'
   labels_path: 'segmentation/labels.txt'
   label_names_path: 'segmentation/label_names_pl.txt'
   colors_path: 'segmentation/colors.txt'
-  detection_min_object_area: 3000
+  detection_min_object_area: 2000
   masked_image_opacity: 0.7
 
 startup:
-  seed: 1
-  mode_selected_option: 1
-  function_selected_options:
-    - 1
-    - 2
-    - 3
+  seed: 123
+  mode_selected_option: 4
+  function_selected_options: 2
 
 inference:
-  images:
-    path: 'data/test/images'
-    output_path: 'data/test/images_output'
+  images_path: 'data/test/images'
   videos:
     path: 'data/test/videos'
     output_path: 'data/test/videos_output'
@@ -70,12 +64,12 @@ inference:
     show_labeled_frame: true
 
 image_labeling:
-  images_folder_path: 'data/detection/Train_frames'
-  image_prefix_path: 'Train_frames'
-  save_path: 'data/detection/train_frames.csv'
+  images_folder_path: 'data/detection/Test_frames'
+  image_prefix_path: 'Test_frames'
+  save_path: 'data/detection/test_frames.csv'
   create_new_df: false
   window_x: 0
-  window_y: 0
+  window_y: 230
   offset_x: 8
   offset_y: 31
   default_label_id: 1

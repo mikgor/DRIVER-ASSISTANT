@@ -224,6 +224,30 @@ Image labeling functions: [`function_selected_options`]. Both are required.
 1. Change working directory to `DRIVER-ASSISTANT/configurations`.
 2. Create a copy of config.yaml named _config.yaml and adjust parameters if needed.
 
+## Trained & ready-to-use models
+### Detection
+Path: `detection/models/frames_single/model50.pth`
+
+Configuration file: `configurations/azure_frames_detection_single_config.yaml`
+
+Training data length: 3286
+
+Validating data length: 372
+
+### Classification
+Path: `classification/models/augmented_model`
+
+Configuration file: `configurations/azure_frames_classification_config.yaml`
+
+Training data length: 27059 
+
+Validating data length: 9019
+
+### Semantic segmentation
+Pre-trained model - Cityscapes Dataset
+
+Path: `segmentation/model.net`
+
 ## Data organisation & sources
 * Test data (data/test)
     * Test images (data/test/images) - Google Street View & Google Graphics
@@ -247,5 +271,3 @@ Image labeling functions: [`function_selected_options`]. Both are required.
     * Test_frames (data/classification/Test_frames) [116 images] - random signs from detection/Test_frames created using
     `create_sign_classification_dataset_from_gtsrb_df('data/detection/test_frames.csv', 'data/classification/Test_frames', config['detection'],
     config['classification'])`
-* Semantic segmentation
-    * Pre-trained model (segmentation/model.net) - Cityscapes Dataset
