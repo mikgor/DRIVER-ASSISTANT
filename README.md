@@ -230,8 +230,6 @@ Path: `detection/models/frames_single/model50.pth`
 
 Configuration file: `configurations/azure_frames_detection_single_config.yaml`
 
-model50.pth download: https://uam-my.sharepoint.com/:u:/g/personal/mikgor_st_amu_edu_pl/ERbs5V_ViMRCohSrgHcXCKsBfwG4wB9Ukn0vrm2eJHZgug?e=O9fZf4
-
 Training data length: 3286
 
 Validating data length: 372
