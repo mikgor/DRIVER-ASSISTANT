@@ -1,3 +1,5 @@
+import sys
+
 import cv2
 from PIL import ImageFont, ImageDraw, Image
 import numpy as np
@@ -29,7 +31,7 @@ class BoundingBox:
         if with_label_id:
             text += f'({self.label_id})'
 
-        font_path = "arial.ttf"
+        font_path = "arial.ttf" if sys.platform.startswith('win32') else "DejaVuSansMono"
         font = ImageFont.truetype(font_path, 16)
         text_width, text_height = font.getsize(text)
 
