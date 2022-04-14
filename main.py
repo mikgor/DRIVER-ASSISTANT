@@ -81,6 +81,7 @@ def display_menu(config):
     TRAIN_DETECTION = 1
     TRAIN_CLASSIFICATION = 2
 
+    print('Driver Assistant')
     startup_config = config['startup']
     inference_config = config['inference']
     inference_images_config = inference_config['images']
@@ -93,7 +94,7 @@ def display_menu(config):
                     (MODE_TRAIN, 'Train'),
                     (MODE_PLAY_LABELED_VIDEOS, 'Apply labels to videos and play'),
                     (MODE_LABEL_IMAGES, 'Label images')]
-    mode_selected_option = input_from_options('Model mode', mode_options, startup_config['mode_selected_option'])
+    mode_selected_option = input_from_options('Mode', mode_options, startup_config['mode_selected_option'])
 
     if mode_selected_option != MODE_TRAIN and mode_selected_option != MODE_PLAY_LABELED_VIDEOS:
         inference_options = [(INFERENCE_DETECTION, 'Detection'),
