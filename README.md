@@ -252,10 +252,9 @@ Path: `segmentation/model.net`
 * Test data (data/test)
     * Test images (data/test/images) - Google Street View & Google Graphics
     * Test signs (data/test/signs) - Selected from data/classification/train
-    * Test videos (data/test/videos) - YouTube
+    * Test videos (data/test/videos) - YouTube - [1][2][3]
 * Detection
-    * Train (data/detection/Train) with annotations (data/detection/train.csv) [39 270 images] and Test data (data/detection/Test) with annotations (data/detection/test.csv) [12 630 images] - https://www.kaggle.com/meowmeowmeowmeowmeow/gtsrb-german-traffic-sign
-    * Train_frames (data/detection/Train_frames) [413 images] - YouTube & Google Graphics & Google Street View
+    * Train (data/detection/Train) with annotations (data/detection/train.csv) [39 270 images] and Test data (data/detection/Test) with annotations (data/detection/test.csv) [12 630 images] - [4]
     * Test_frames (data/detection/Test_frames) [69 images] - Google Street View
     * train_subset.csv (data/detection/train_subset.csv) [350 images] & test_subset.csv 
     (data/detection/test_subset.csv) [70 images] - random signs from GTSRB looking similarly to Polish 
@@ -264,10 +263,23 @@ Path: `segmentation/model.net`
     `create_random_subset_from_gtsrb_df('data/detection/X.csv', 'data/detection/X_subset.csv', 'ClassId',
     [15, 17, 14, 9, 29, 0, 1, 2, 3, 4, 5, 7, 8, 12], [26, 28, 29, 32, 45, 35, 35, 35, 35, 35, 35, 35, 35, 59], Y)`
 * Classification
-    * Train (data/classification/train) [16 702 images] and test data (data/classification/test) [4 298 images]- https://www.kaggle.com/kasia12345/polish-traffic-signs-dataset
+    * Train (data/classification/train) [16 702 images] and test data (data/classification/test) [4 298 images]- [5]
     * Train_frames (data/classification/Test_frames) [1 293 images] - random signs from detection/Train_frames created using
     `create_sign_classification_dataset_from_gtsrb_df('data/detection/train_frames.csv', 'data/classification/Train_frames', config['detection'],
     config['classification'])`
     * Test_frames (data/classification/Test_frames) [116 images] - random signs from detection/Test_frames created using
     `create_sign_classification_dataset_from_gtsrb_df('data/detection/test_frames.csv', 'data/classification/Test_frames', config['detection'],
     config['classification'])`
+
+### Sources:
+[1] Mateusz Baryła (https://www.youtube.com/channel/UCKDhmtsuwlP2Hs0KUrBkK5Q) - Cracow 4K night driving (https://youtu.be/qEd4CB7OEkM)
+
+[2] GoodPlace33 travel [Paweł Koronacki] (https://www.youtube.com/channel/UColdbTFeTctW0FLHsuh3VkQ) - Driving around Poznań - Part 1, Wilda to Winogrady - 30th March 2021 (https://youtu.be/QRIUaYbZyXg), Driving around Poznań - Part 3 - 31th March 2021 (https://youtu.be/GfsviXXLQ6o)
+
+[3] przychodzkipl - aviation & travel [Michał Przychodzki] (https://www.youtube.com/channel/UCQJzMRYjkjJCu0FnAknwjXA), “Warsaw -
+driving through the center of the Polish capital | Warszawa przejazd przez
+centrum stolicy“ (https://youtu.be/K8eSOt8u25w)
+
+[4] Mykola, “GTSRB - German Traffic Sign Recognition Benchmark“ (https://www.kaggle.com/datasets/meowmeowmeowmeowmeow/gtsrb-germantraffic-sign)
+
+[5] KASIA12345, “polish traffic signs dataset“ (https://www.kaggle.com/datasets/kasia12345/polish-traffic-signs-dataset)
