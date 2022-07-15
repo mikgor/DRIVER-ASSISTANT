@@ -1,5 +1,7 @@
-# DRIVER ASSISTANT
-[![Detection and classification example](https://s439393.students.wmi.amu.edu.pl/da/detection_and_classification_and_segmentation_example.png)](https://s439393.students.wmi.amu.edu.pl/da/detection_and_classification_and_segmentation_example.png)
+[![DRIVER ASSISTANT logo](data/presentation/logo.png)](data/presentation/logo.png)
+[![Video](data/presentation/video_frame.png)](https://drive.google.com/file/d/1ty_AVIRdvPLIAsbFg8koPaif_RnZspDP/view?usp=sharing)
+[![Detection and classification & segmentation example](data/presentation/detection_and_classification_and_segmentation_example.png)](data/presentation/detection_and_classification_and_segmentation_example.png)
+[![Detection and classification example](data/presentation/detection_and_classification_example.png)](data/presentation/detection_and_classification_example.png)
 
 DRIVER ASSISTANT (DA) is an application that has implemented following functions:
 
