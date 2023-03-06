@@ -1,4 +1,8 @@
 ### Python template
+
+# Model 
+detection\models\frames_single\model50.pth
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
